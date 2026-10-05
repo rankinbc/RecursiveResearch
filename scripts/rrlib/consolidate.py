@@ -2,6 +2,7 @@
 import re
 from pathlib import Path
 
+from . import verify
 from .store import read_text, write_text
 
 HEADING = "## Open at the end"
@@ -14,6 +15,7 @@ def consolidate(ws):
     Safe to run again: the 'Open at the end' section is rebuilt each time.
     """
     ws = Path(ws)
+    swept = verify.sweep(ws)
     unknowns, conflicts = [], []
     for path in sorted((ws / "knowledge" / "tree").rglob("*.md")):
         rel = path.relative_to(ws).as_posix()
@@ -35,5 +37,6 @@ def consolidate(ws):
     new = [(item, rel) for item, rel in unknowns if f"- {item}\n" not in existing]
     section = "".join(f"- {item} ({rel})\n" for item, rel in new) or "- none\n"
     write_text(target, f"{existing}\n{HEADING}\n\n{section}")
-    return {"open_unknowns": len(new), "conflict_count": len(conflicts),
+    return {"open_unknowns": len(new), "quotes_downgraded": swept["downgraded"],
+            "conflict_count": len(conflicts),
             "conflicts": conflicts[:MAX_CONFLICTS]}

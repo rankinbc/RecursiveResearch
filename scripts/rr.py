@@ -14,7 +14,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from rrlib import (briefs, consolidate, guard, progress, report, scoring, store, survey,  # noqa: E402
-                   tasks, validate)
+                   tasks, validate, verify)
 
 VALIDATE_TARGETS = ("plan", "entity_schema", "entity", "proposals", "raw", "tree")
 MAX_ISSUES = 10
@@ -99,6 +99,9 @@ def build_parser():
     p.add_argument("ids", nargs="*", help="proposal ids to approve")
     p.add_argument("--all", action="store_true", help="approve every proposal not skipped")
     p.add_argument("--skip", nargs="*", default=[], metavar="ID", help="proposal ids to skip")
+
+    p = sub.add_parser("verify", help="check every PRIMARY claim in knowledge/ against its source")
+    p.add_argument("slug")
 
     p = sub.add_parser("consolidate", help="record open unknowns and list conflicts in the tree")
     p.add_argument("slug")
@@ -186,6 +189,8 @@ def dispatch(args):
         return briefs.job_brief(ws, args.job), 0
     if args.command == "assemble-survey":
         return survey.assemble_survey(ws, args.force), 0
+    if args.command == "verify":
+        return verify.sweep(ws), 0
     if args.command == "consolidate":
         return consolidate.consolidate(ws), 0
     if args.command == "approve-proposals":

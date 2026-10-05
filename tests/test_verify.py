@@ -80,7 +80,7 @@ class VerifyTests(WorkspaceCase):
             finding("A frame MUST NOT exceed 16384 bytes.", source="Wire spec (https://example.org/spec), section 4"))
         self.assertEqual(summary["verified"], 2)
         self.assertEqual(self.calls, ["https://example.org/spec"])
-        self.assertEqual(len(list((self.ws / "sessions" / self.session / "sources").glob("*.txt"))), 1)
+        self.assertEqual(len(list((self.ws / "sources").glob("*.txt"))), 1)
 
     def test_a_fetch_failure_downgrades_and_says_why(self):
         self.fake_fetch({})

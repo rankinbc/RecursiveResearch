@@ -1,6 +1,8 @@
 """Decide which branches of the knowledge tree have run dry, and close them."""
 from pathlib import Path
 
+from . import verify
+
 from .provenance import WEAK
 from .store import RRError, load_plan, read_json, read_text, save_plan, write_json
 from .tasks import MAX_ATTEMPTS, current_session, load_tasks, session_dir
@@ -130,6 +132,7 @@ def apply_score(ws, result):
         gate = read_json(gate_path)
         return _gate_summary(ws, session, gate["branches"], gate["blocked"], gate["proposals_dropped"], True)
 
+    verify.sweep(ws)  # the organizer has just filed this wave's findings
     to_close = sorted(n for n, b in result["branches"].items() if b["recommendation"] == "close")
     blocked = sorted(n for n, b in result["branches"].items() if b["recommendation"] == "blocked")
 

@@ -13,6 +13,7 @@ when you need to explain a file to the user.
         entities/<type_id>.json
         tree/
         remaining_unknowns.md
+        verification.json        # which files have been checked, and the counts
       sessions/<session>/
         tasks.json
         activity.md
@@ -23,8 +24,8 @@ when you need to explain a file to the user.
         coordination_brief.md    # deepening only; who owns what in the next wave
         gate.json                # deepening only; present once the session is scored
         knowledge_snapshot.json
-        sources/                 # pages the script fetched to check quotes, and index.json
       issues/                    # full issue lists when validation finds more than ten
+      sources/                   # pages the script fetched to check quotes, and index.json
 
 Session names are `<date>_<stage>`, or `<date>_deepening_w<NN>` for deepening.
 Wave `w00` is the bootstrap. `plan.json` lists sessions in order under

@@ -38,17 +38,30 @@ result is at most `SECONDARY`, even when the page is the primary source.
 `PRIMARY` is only for text read directly: a local file, or a passage copied
 word for word.
 
-In stage 4 this is checked. Every `PRIMARY` finding carries the passage as a
-`quote` with a `source_url` or `source_file`. When the task completes, the
-script opens that source itself and looks for the quote. If it is there the
-finding is marked `"verified": true`. If not, the finding is downgraded to
-`SECONDARY` and the reason is recorded in `verify_note`. A source the script
-cannot open, such as a `gemini://` address or a page that fails to load,
+## The script checks every PRIMARY claim
+
+This is enforced, in every stage. A `PRIMARY` claim must carry the exact words
+and where they are, and the script opens that source itself and looks for
+them:
+
+| Where | How the evidence is written |
+|---|---|
+| Markdown (survey, tree) | `[PRIMARY: "the exact words" https://address]` |
+| A stage 4 finding, or an entry in a JSON leaf | `"tier": "PRIMARY"` with `"quote"` and `"source_url"` |
+| An entity roster | `"evidence": {"quote": ..., "source_url": ...}` on the entity, or one per property |
+
+A local file can stand in for the address (`source_file`, or a path in the
+tag). For a number in a roster, the number must also appear in the quote.
+
+A claim that passes stays `PRIMARY`. One that fails is downgraded to
+`SECONDARY` with the reason: no quote, quote not found, or source not
+reachable. A source the script cannot open, such as a `gemini://` address,
 counts as not confirmed.
 
-The survey and the entity rosters are not checked this way. There the cap is
-an instruction to the researcher, so treat their `PRIMARY` tags with more
-caution than a verified stage 4 finding.
+The check runs when a survey section or a research result is completed, when
+a roster is promoted, and after each organizer writes to `knowledge/`. So
+after any of those, every `PRIMARY` left in the knowledge base has been
+confirmed against its source. To run it by hand: `RR verify <slug>`.
 
 ## Writing tags
 

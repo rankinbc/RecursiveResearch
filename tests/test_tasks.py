@@ -111,7 +111,8 @@ class SurveyTests(WorkspaceCase):
     def test_completing_logs_activity_and_refuses_a_second_time(self):
         self.write(f"sessions/{self.session}/raw/s01.md", "section\n")
         result = tasks.complete_task(self.ws, "s01", "wrote the overview")
-        self.assertEqual(result, {"completed": "s01", "verdict": None, "remaining": 3})
+        self.assertEqual({k: result[k] for k in ("completed", "verdict", "remaining")},
+                         {"completed": "s01", "verdict": None, "remaining": 3})
         log = (self.ws / "sessions" / self.session / "activity.md").read_text(encoding="utf-8")
         self.assertIn("- 2026-10-04 s01: wrote the overview\n", log)
         with self.assertRaisesRegex(store.RRError, "already complete"):

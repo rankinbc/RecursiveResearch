@@ -29,6 +29,8 @@ Write JSON to `{{WORKSPACE}}/{{OUTPUT}}` in exactly this shape:
           "name": "Instance name",
           "properties": {"<property>": <value>, "<property>": null},
           "provenance": {"<property>": "PRIMARY", "<property>": "UNKNOWN"},
+          "evidence": {"quote": "the exact words that state these values",
+                       "source_url": "https://address-of-the-page"},
           "notes": null
         }
       ]
@@ -58,7 +60,16 @@ local file you opened, or a passage you can copy word for word from what the
 tool returned. When you are not sure the words are the source's own, use the
 lower tier.
 
-If a value is `PRIMARY`, say in `notes` where its exact words can be found.
+Every `PRIMARY` value needs `evidence`: the exact words that state it and the
+address of the page they are on. One `evidence` block can cover a whole entity
+when a single passage gives all its values. If different values come from
+different passages, give `evidence` one block per property instead:
+`{"<property>": {"quote": "...", "source_url": "..."}}`.
+
+A script opens the address and looks for the quote, and for a number it also
+checks that the number is in the quote. A `PRIMARY` value with no evidence, or
+whose quote is not on that page, is downgraded to `SECONDARY`. Leave
+`evidence` out for an entity with no `PRIMARY` values.
 
 Completeness matters, but not more than accuracy. A `null` is correct when
 you do not know. An invented value is a defect.

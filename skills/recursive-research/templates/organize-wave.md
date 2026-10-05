@@ -28,6 +28,16 @@ Use each finding's `tier` as it stands in the raw file. A script has already
 checked every `PRIMARY` quote against its source and downgraded the ones it
 could not confirm; never raise a tier back.
 
+Carry the evidence with every `PRIMARY` claim, because a script checks the
+tree after you finish and downgrades any `PRIMARY` it cannot confirm:
+
+- In Markdown, write the tag with its quote and address:
+  `[PRIMARY: "the exact words" https://address]`. Take them from the finding's
+  `quote` and `source_url`, or copy the whole tag when the claim already has
+  one.
+- In a JSON leaf, an entry that is `PRIMARY` has `"tier": "PRIMARY"` with its
+  `"quote"` and `"source_url"`.
+
 A JSON leaf must have exactly this `_meta` block, with both fields filled in:
 
     {

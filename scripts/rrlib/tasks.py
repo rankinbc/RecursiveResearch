@@ -264,6 +264,10 @@ def complete_task(ws, task_id, summary, session=None):
     task["passes"] = True
     task["last_error"] = None
     write_json(session_dir(ws, session) / "tasks.json", doc)
+    if stage == "survey" and "/raw/" in task["output"]:
+        quotes = {**verify.verify_markdown(ws, output), "notes": []}
+    if "/raw/" not in task["output"]:
+        verify.sweep(ws)  # an organizer has just written to knowledge/
     result = {"completed": task_id, "verdict": task["verdict"],
               "remaining": sum(1 for t in doc["tasks"] if not t["passes"])}
     if quotes and (quotes["verified"] or quotes["downgraded"]):
@@ -345,4 +349,7 @@ def promote_entity(ws, tid, session=None):
     target = Path(ws) / "knowledge" / "entities" / f"{tid}.json"
     target.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(source, target)
-    return {"promoted": True, "file": f"knowledge/entities/{tid}.json", "issues": issues}
+    verify.sweep(ws)
+    checked = verify.record_for(ws, target)
+    return {"promoted": True, "file": f"knowledge/entities/{tid}.json", "issues": issues,
+            "quotes_verified": checked["verified"], "quotes_downgraded": checked["downgraded"]}

@@ -34,6 +34,16 @@ Also write `{{WORKSPACE}}/knowledge/tree/README.md`: what the subject is, how
 it works end to end, an index of the branches, and its own `## Known
 Unknowns`.
 
+Carry the evidence with every `PRIMARY` claim, because a script checks the
+tree after you finish and downgrades any `PRIMARY` it cannot confirm:
+
+- In Markdown, write the tag with its quote and address:
+  `[PRIMARY: "the exact words" https://address]`. Take them from the finding's
+  `quote` and `source_url`, or copy the whole tag when the claim already has
+  one.
+- In a JSON leaf, an entry that is `PRIMARY` has `"tier": "PRIMARY"` with its
+  `"quote"` and `"source_url"`.
+
 A JSON leaf must have exactly this `_meta` block, with both fields filled in:
 
     {

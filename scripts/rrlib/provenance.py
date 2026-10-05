@@ -6,8 +6,9 @@ TIERS = ("PRIMARY", "EXPERT", "SECONDARY", "INFERRED", "OBSERVED", "UNKNOWN")
 WEAK = ("INFERRED", "OBSERVED")
 MAPPED_TIERS = ("PRIMARY", "EXPERT", "SECONDARY")
 
-# [PRIMARY] or [UNKNOWN: est 3-5]; the lookahead skips Markdown links like [API](url)
-TAG_RE = re.compile(r"\[([A-Z][A-Z_]+)(?::[^\]\n]*)?\](?!\()")
+# [PRIMARY], [UNKNOWN: est 3-5] or [PRIMARY: "exact quote" https://address]. Group 2 is the
+# text after the colon, which may wrap across lines. The lookahead skips links like [API](url).
+TAG_RE = re.compile(r"\[([A-Z][A-Z_]+)(?::([^\]]*))?\](?!\()")
 
 
 def stronger(a, b):

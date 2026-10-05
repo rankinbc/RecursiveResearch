@@ -19,6 +19,8 @@ Edit tool. Rewriting it risks dropping or altering what the researchers wrote.
 4. Check that each contents link matches its section heading.
 
 Do not add facts of your own. Do not remove a claim because it is uncertain;
-its tag already says so. Keep every provenance tag.
+its tag already says so. Keep every provenance tag whole, including the
+quote and address inside a `PRIMARY` tag: a script checks them again after
+you finish, and a `PRIMARY` tag that has lost them is downgraded.
 
 This brief was written for session `{{SESSION}}`.

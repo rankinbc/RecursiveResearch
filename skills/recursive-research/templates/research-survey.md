@@ -40,5 +40,15 @@ local file you opened, or a passage you can copy word for word from what the
 tool returned. When you are not sure the words are the source's own, use the
 lower tier.
 
+A `PRIMARY` claim carries its evidence inside the tag: the exact words, in
+double quotes, then the address of the page they are on.
+
+    The frame limit is 16384 bytes [PRIMARY: "A frame MUST NOT exceed 16384 bytes." https://example.org/spec].
+
+A script opens that address and looks for those words. A `PRIMARY` tag with no
+quote, or whose words are not on that page, is rewritten as `SECONDARY`. So
+quote only words you can see, cite the page they are actually on, and avoid
+passages that contain square brackets.
+
 End the section with a `### Open questions` list of specific facts you could
 not find.

@@ -142,7 +142,7 @@ class AssembleSurveyTests(WorkspaceCase):
         super().setUp()
         self.fill_plan()
         self.session = tasks.add_session(self.ws, "survey")["session"]
-        self.write(f"sessions/{self.session}/raw/s01.md", "## Overview & Scope\n\nIt is a protocol [PRIMARY].\n")
+        self.write(f"sessions/{self.session}/raw/s01.md", "## Overview & Scope\n\nIt is a protocol [SECONDARY].\n")
         tasks.complete_task(self.ws, "s01", "x")
         self.write(f"sessions/{self.session}/raw/s02.md", "A section whose author forgot the heading.\n")
         tasks.complete_task(self.ws, "s02", "x")
@@ -153,7 +153,7 @@ class AssembleSurveyTests(WorkspaceCase):
         text = (self.ws / "knowledge" / "spec.md").read_text(encoding="utf-8")
         self.assertTrue(text.startswith("# Test Subject -- Survey\n\n## Contents\n\n"))
         self.assertIn("- [Overview & Scope](#overview--scope)\n- [End to end](#end-to-end)\n", text)
-        self.assertLess(text.index("It is a protocol [PRIMARY]."), text.index("## End to end\n\nA section whose"))
+        self.assertLess(text.index("It is a protocol [SECONDARY]."), text.index("## End to end\n\nA section whose"))
         self.assertTrue(text.endswith("## Missing sections\n\n- History\n"))
 
     def test_an_existing_survey_is_not_overwritten_without_force(self):
