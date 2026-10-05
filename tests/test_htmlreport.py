@@ -49,6 +49,13 @@ class MarkdownTests(unittest.TestCase):
         self.assertNotIn("../other", out)
         self.assertIn("a file", out)
 
+    def test_a_link_to_another_file_becomes_an_in_page_link_when_the_report_holds_it(self):
+        where = {"../other/README.md": "f-other-readme-md"}
+        out = mdlite.render("See [a file](../other/README.md) and [a lost one](gone.md).\n", resolve=where.get)
+        self.assertIn('<a href="#f-other-readme-md">a file</a>', out)
+        self.assertIn("a lost one", out)
+        self.assertNotIn("gone.md", out)
+
     def test_plain_tier_tags_become_badges(self):
         out = self.html("Vendors agree [SECONDARY]. Maybe [UNKNOWN: est 3-5]. Guess [INFERRED].\n")
         self.assertIn('<span class="tier t-secondary">SECONDARY</span>', out)
@@ -158,6 +165,53 @@ class ReportTests(WorkspaceCase):
         out = json.loads(proc.stdout)
         self.assertEqual((proc.returncode, out["file"]), (0, (self.ws / "report.html").as_posix()))
         self.assertEqual(out["scorecard"]["claims"], 12)
+
+    def rebuild(self):
+        htmlreport.write_report(self.ws)
+        return (self.ws / "report.html").read_text(encoding="utf-8")
+
+    def test_links_between_knowledge_files_jump_within_the_report(self):
+        self.write("knowledge/tree/wire/README.md",
+                   "# Wire\n\nSizes are in [the table](frame_sizes.json), context in [the survey](../../spec.md#overview), "
+                   "types in [the roster](../../entities/message_type.json), parent [up](../README.md), "
+                   "folder [here](./), outside [x](../../../plan.json) and [y](missing.md) [SECONDARY].\n\n"
+                   "## Known Unknowns\n- none\n")
+        html = self.rebuild()
+        for label, target in (("the table", "f-wire-frame-sizes-json"), ("the survey", "survey"),
+                              ("the roster", "c-message-type"), ("up", "f-readme-md"), ("here", "f-wire-readme-md")):
+            self.assertIn(f'<a href="#{target}">{label}</a>', html)
+            self.assertIn(f'id="{target}"', html)
+        self.assertNotIn("plan.json", html)
+        self.assertNotIn("missing.md", html)
+
+    def test_every_in_page_link_has_somewhere_to_land(self):
+        self.write("knowledge/spec.md", "# Survey\n\nSee [the wire branch](tree/wire/README.md) [SECONDARY].\n")
+        html = self.rebuild()
+        self.assertIn('<a href="#f-wire-readme-md">the wire branch</a>', html)
+        ids = set(re.findall(r'id="([^"]+)"', html))
+        for target in re.findall(r'href="#([^"]+)"', html):
+            self.assertIn(target, ids)
+
+    def test_a_name_property_that_repeats_the_instance_name_is_not_shown_twice(self):
+        self.write("knowledge/entities/message_type.json", {"entity_type": "MessageType", "count": 2, "entities": [
+            {"name": "HELLO", "properties": {"Name": "HELLO", "code": 1}, "provenance": "SECONDARY"},
+            {"name": "PING", "properties": {"Name": "PING", "code": 2}, "provenance": {"Name": "EXPERT", "code": "UNKNOWN"}}]})
+        html = self.rebuild()
+        table = html[html.index('id="c-message-type"'):]
+        table = table[:table.index("</table>")]
+        self.assertEqual(table.count("<th>"), 2)
+        self.assertEqual((table.count("HELLO"), table.count("PING")), (1, 1))
+        self.assertRegex(table, r'<td class="cell t-expert"[^>]*><span class="v"><strong>PING</strong>')
+
+    def test_a_name_property_that_differs_from_the_instance_name_keeps_its_column(self):
+        self.write("knowledge/entities/message_type.json", {"entity_type": "MessageType", "count": 2, "entities": [
+            {"name": "HELLO", "properties": {"name": "Hello message", "code": 1}, "provenance": "SECONDARY"},
+            {"name": "PING", "properties": {"name": "PING", "code": 2}, "provenance": "SECONDARY"}]})
+        html = self.rebuild()
+        table = html[html.index('id="c-message-type"'):]
+        table = table[:table.index("</table>")]
+        self.assertEqual(table.count("<th>"), 3)
+        self.assertIn("Hello message", table)
 
     def test_an_empty_workspace_still_produces_a_report(self):
         ws = store.scaffold(self.root, "Empty One")["workspace"]

@@ -52,8 +52,11 @@ def _tag(match, checked):
     return badge(tier, checked, quote.group(1) if quote else None, url.group(0).rstrip(".,;") if url else None)
 
 
-def inline(text, checked=True):
-    """Render one run of text. Code, tags and links are set aside first, then the rest is escaped."""
+def inline(text, checked=True, resolve=None):
+    """Render one run of text. Code, tags and links are set aside first, then the rest is escaped.
+
+    `resolve` maps a link to another file onto the id of the place the page shows it, or None.
+    """
     kept = []
 
     def keep(rendered):
@@ -72,7 +75,10 @@ def inline(text, checked=True):
         label, target = match.group(1), match.group(2)
         if target.lower().startswith(("http://", "https://")):
             return keep(f'<a href="{esc(target)}" {REL}>{esc(label)}</a>')
-        return label  # a link to another file in the knowledge base: keep the words, drop the path
+        anchor = resolve(target) if resolve else None
+        if anchor:
+            return keep(f'<a href="#{esc(anchor)}">{esc(label)}</a>')
+        return label  # a link to a file the page does not show: keep the words, drop the path
 
     text = LINK_RE.sub(link, text)
     text = esc(text)
@@ -91,14 +97,14 @@ def _cells(line):
     return [cell.strip() for cell in line.split("|")]
 
 
-def render(text, checked=True, heading_offset=0, id_prefix=""):
+def render(text, checked=True, heading_offset=0, id_prefix="", resolve=None):
     """Render Markdown to HTML. `checked` says whether this file's PRIMARY tags are verified."""
     lines = text.replace("\r\n", "\n").split("\n")
     out = []
     i, n = 0, len(lines)
 
     def run(s):
-        return inline(s, checked)
+        return inline(s, checked, resolve)
 
     while i < n:
         line = lines[i]

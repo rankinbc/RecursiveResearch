@@ -1,5 +1,6 @@
 """Turn a knowledge base into one self-contained HTML page a person can read and share."""
 import json
+import posixpath
 from pathlib import Path
 
 from .mdlite import REL, badge, esc, inline, render, slug
@@ -226,13 +227,44 @@ def _leaf(doc, checked):
     return "".join(parts)
 
 
-def _tree_section(ws, card):
+def _tree_files(ws):
+    tree = Path(ws) / "knowledge" / "tree"
+    return sorted(p for p in tree.rglob("*") if p.is_file() and p.suffix in (".md", ".json"))
+
+
+def _anchors(ws, card):
+    """Where the page shows each knowledge file: path under knowledge/ -> element id."""
+    knowledge = Path(ws) / "knowledge"
+    found = {}
+    if card["branches"]:
+        for path in _tree_files(ws):
+            found[path.relative_to(knowledge).as_posix()] = "f-" + slug(path.relative_to(knowledge / "tree").as_posix())
+    for t in card["catalogue"]:
+        found[f"entities/{t['type']}.json"] = "c-" + slug(t["type"])
+    for name, anchor in (("spec.md", "survey"), ("remaining_unknowns.md", "unknowns")):
+        if (knowledge / name).is_file():
+            found[name] = anchor
+    return found
+
+
+def _resolver(anchors, folder):
+    """Turn a link written in a file in `folder` (relative to knowledge/) into an id on the page."""
+    def resolve(target):
+        target = target.split("#")[0].split("?")[0]
+        if not target or ":" in target or target.startswith("/"):
+            return None
+        rel = posixpath.normpath(posixpath.join(folder, target))
+        return anchors.get(rel) or anchors.get(posixpath.join(rel, "README.md"))
+    return resolve
+
+
+def _tree_section(ws, card, anchors):
     tree = Path(ws) / "knowledge" / "tree"
     if not card["branches"]:
         return ""
     status = {b["branch"]: b for b in card["branches"]}
     groups = {}
-    for path in sorted(p for p in tree.rglob("*") if p.is_file() and p.suffix in (".md", ".json")):
+    for path in _tree_files(ws):
         parts = path.relative_to(tree).parts
         groups.setdefault(parts[0] if len(parts) > 1 else OVERVIEW, []).append(path)
     out = ['<section id="tree"><h2>Knowledge tree</h2>'
@@ -250,13 +282,16 @@ def _tree_section(ws, card):
             rel = path.relative_to(tree).as_posix()
             checked = is_checked(ws, path)
             if path.suffix == ".md":
-                body = render(read_text(path), checked, heading_offset=2, id_prefix=slug(rel) + "-")
+                folder = posixpath.dirname("tree/" + rel)
+                body = render(read_text(path), checked, heading_offset=2, id_prefix=slug(rel) + "-",
+                              resolve=_resolver(anchors, folder))
             else:
                 try:
                     body = _leaf(read_json(path), checked)
                 except RRError as e:
                     body = f'<p class="empty">{esc(e)}</p>'
-            out.append(f'<div class="card"><div class="path">{esc(rel)}</div><div class="body">{body}</div></div>')
+            out.append(f'<div class="card" id="f-{esc(slug(rel))}"><div class="path">{esc(rel)}</div>'
+                       f'<div class="body">{body}</div></div>')
         out.append("</div>")
     out.append("</section>")
     return "".join(out)
@@ -276,13 +311,20 @@ def _catalogue_section(ws, card):
         columns = []
         for e in entities:
             columns += [k for k in e["properties"] if k not in columns]
+        # A property that only repeats the instance's name is shown once, in the first column.
+        same = next((c for c in columns if c.lower() == "name" and all(
+            c not in e["properties"] or str(e["properties"][c]).strip() == str(e.get("name", "")).strip()
+            for e in entities)), None)
+        if same:
+            columns.remove(same)
         rows = []
         for e in entities:
             given = e.get("provenance")
             evidence = e.get("evidence") if isinstance(e.get("evidence"), dict) else {}
             verified = e.get("verified") if isinstance(e.get("verified"), list) else []
-            cells = [f"<td><strong>{esc(e.get('name', ''))}</strong></td>"]
-            for c in columns:
+            name = f"<strong>{esc(e.get('name', ''))}</strong>"
+            cells = [] if same in e["properties"] else [f"<td>{name}</td>"]
+            for c in ([same] if same in e["properties"] else []) + columns:
                 tier = given if isinstance(given, str) else (given or {}).get(c)
                 css = f" t-{tier.lower()}" if tier in TIERS else ""
                 claim = evidence.get(c) if isinstance(evidence.get(c), dict) else evidence
@@ -295,7 +337,8 @@ def _catalogue_section(ws, card):
                         mark = f'<a class="src" href="{esc(url)}" {REL} title="{quote}">✓</a>'
                     else:
                         mark = f'<span class="src" title="{quote}">✓</span>'
-                cells.append(f'<td class="cell{css}"{title}><span class="v">{_value(e["properties"].get(c))}</span>{mark}</td>')
+                shown = name if c == same else _value(e["properties"].get(c))
+                cells.append(f'<td class="cell{css}"{title}><span class="v">{shown}</span>{mark}</td>')
             rows.append("<tr>" + "".join(cells) + "</tr>")
         head = "<th>Instance</th>" + "".join(f"<th>{esc(c)}</th>" for c in columns)
         out.append(f'<div class="branch" id="c-{esc(slug(t["type"]))}"><h3>{esc(t["name"])} '
@@ -321,12 +364,13 @@ def _conflicts_section(ws):
             + "".join(items) + "</ul></div></div></section>")
 
 
-def _markdown_section(ws, name, anchor, title, lead, collapse=False):
+def _markdown_section(ws, name, anchor, title, lead, anchors, collapse=False):
     path = Path(ws) / "knowledge" / name
     if not path.is_file():
         return ""
     text = read_text(path)
-    body = render(text, is_checked(ws, path), heading_offset=2, id_prefix=anchor + "-")
+    body = render(text, is_checked(ws, path), heading_offset=2, id_prefix=anchor + "-",
+                  resolve=_resolver(anchors, ""))
     if collapse:
         body = f'<details><summary>Read the full text ({text.count(chr(10)) + 1} lines)</summary>{body}</details>'
     return (f'<section id="{anchor}"><h2>{title}</h2><p class="lead">{lead}</p>'
@@ -338,13 +382,14 @@ def build(ws):
     ws = Path(ws)
     plan = load_plan(ws)
     card = scorecard(ws)
-    sections = [_scorecard_section(card), _conflicts_section(ws), _tree_section(ws, card),
+    anchors = _anchors(ws, card)
+    sections = [_scorecard_section(card), _conflicts_section(ws), _tree_section(ws, card, anchors),
                 _catalogue_section(ws, card),
                 _markdown_section(ws, "spec.md", "survey", "Survey",
                                   "The broad overview written first. Use it to find your way; use the tree for "
-                                  "anything exact.", collapse=True),
+                                  "anything exact.", anchors, collapse=True),
                 _markdown_section(ws, "remaining_unknowns.md", "unknowns", "Remaining unknowns",
-                                  "What was looked for and not found, and why each branch stopped.")]
+                                  "What was looked for and not found, and why each branch stopped.", anchors)]
     present = [s for s in sections if s]
     if not card["overall"]["claims"] and len(present) <= 1:
         present = ['<section id="scorecard"><h2>Scorecard</h2><p class="empty">No research yet. '
