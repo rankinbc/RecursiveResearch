@@ -37,6 +37,18 @@ class TemplateTests(unittest.TestCase):
         self.assertIn("at most `SECONDARY`", text)
         self.assertIn("summary written by a model", text)
 
+    def test_the_deepening_brief_says_quotes_are_checked_against_the_source(self):
+        text = template("research-deepening.md")
+        self.assertIn("`source_url`", text)
+        self.assertIn("downgraded", text)
+
+    def test_organizer_briefs_show_the_exact_shape_of_a_json_leaf(self):
+        for name in ("organize-wave.md", "organize-bootstrap.md"):
+            text = template(name)
+            self.assertIn('"_meta"', text, name)
+            self.assertIn('"provenance"', text, name)
+            self.assertIn('"source"', text, name)
+
     def test_agents_are_not_invited_to_read_whole_large_files(self):
         self.assertIn("Do not read the whole file", template("research-entity.md"))
         self.assertIn("Do not open the roster files", template("organize-bootstrap.md"))

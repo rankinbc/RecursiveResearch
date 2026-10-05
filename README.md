@@ -86,11 +86,21 @@ Each gate lists what closed and why, and you can reopen any branch.
 
 ## How far to trust the tiers
 
-Web tools return a model's summary of a page, not its text. The briefs
-therefore cap anything learned only that way at `SECONDARY`, and a `PRIMARY`
-finding in stage 4 must carry the exact quote. The script checks that the
-quote is present; it cannot check it against the source. Before relying on an
-exact limit or wording, read the source yourself.
+Web tools return a model's summary of a page, not its text, so a researcher
+can "quote" a sentence the page never contained. Two things guard against that:
+
+- **In stage 4 the script checks every `PRIMARY` quote itself.** It opens the
+  cited page and looks for the quoted words. A finding whose quote is there is
+  marked verified. One whose quote is missing, or whose source cannot be
+  opened, is downgraded to `SECONDARY` with the reason recorded. On the first
+  real wave it confirmed 22 of 26 quotes and downgraded 4: three that were not
+  in the page they cited, one of them a disputed fact, and one too short to
+  check.
+- **In the survey and entity rosters there is no such check.** Researchers are
+  told to cap anything they read only through a web tool at `SECONDARY`, but
+  nothing enforces it. Treat `PRIMARY` there with more caution.
+
+Before relying on an exact limit or wording, read the source yourself.
 
 ## Status
 

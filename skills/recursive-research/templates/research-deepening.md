@@ -34,6 +34,7 @@ Write JSON to `{{WORKSPACE}}/{{OUTPUT}}` in exactly this shape:
       "findings": [
         {"claim": "The maximum frame length is 16384 bytes", "tier": "PRIMARY",
          "source": "RFC 9999, section 4.2",
+         "source_url": "https://example.org/rfc9999.txt",
          "quote": "A frame MUST NOT exceed 16384 bytes.", "detail": ""}
       ],
       "unknowns_resolved": ["The maximum frame length in bytes"],
@@ -65,8 +66,15 @@ local file you opened, or a passage you can copy word for word from what the
 tool returned. When you are not sure the words are the source's own, use the
 lower tier.
 
-Every `PRIMARY` finding must carry a `quote`: the exact words, copied from
-the source, that state the fact. A `PRIMARY` finding without one is rejected.
+Every `PRIMARY` finding must carry a `quote` and a `source_url`: the exact
+words that state the fact, and the address of the page those words are on.
+For a local file, give `source_file` in place of `source_url`.
+
+When you finish, a script opens that address itself and looks for your quote.
+If the words are not there, the finding is downgraded to `SECONDARY` and the
+reason is recorded on it. So quote only words you can see, and cite the page
+they are actually on. A sentence from an older version of a document is not in
+the current version, even if it is about the same rule.
 
 ## Verdict
 

@@ -26,6 +26,11 @@ Show the user:
 - **Closed this wave:** each branch and its reason, from `closed`.
 - **Still open:** from `open`.
 - **Blocked:** from `blocked`, with the task errors from `RR status <slug>`.
+- **Dropped:** proposals in `dropped`, each on a branch that closed. Say that
+  reopening the branch brings them back.
+- **Quotes:** how many `PRIMARY` findings the script downgraded this wave,
+  from the `quotes_downgraded` counts that `complete-task` returned.
+- **Validation:** any tree or proposal errors still left after the one fix.
 - **Conflicts:** any the organizer reported, with both values and their
   sources, for the user to decide.
 - **Proposals:** a numbered list from `proposals`: title, the unknown it

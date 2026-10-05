@@ -36,9 +36,19 @@ page's own text. So a claim learned only through a web fetch or a search
 result is at most `SECONDARY`, even when the page is the primary source.
 
 `PRIMARY` is only for text read directly: a local file, or a passage copied
-word for word. In stage 4 every `PRIMARY` finding carries that passage as a
-`quote`, and the script rejects one without it. The script cannot check the
-quote against the source, so treat `PRIMARY` as "quoted", not as "verified".
+word for word.
+
+In stage 4 this is checked. Every `PRIMARY` finding carries the passage as a
+`quote` with a `source_url` or `source_file`. When the task completes, the
+script opens that source itself and looks for the quote. If it is there the
+finding is marked `"verified": true`. If not, the finding is downgraded to
+`SECONDARY` and the reason is recorded in `verify_note`. A source the script
+cannot open, such as a `gemini://` address or a page that fails to load,
+counts as not confirmed.
+
+The survey and the entity rosters are not checked this way. There the cap is
+an instruction to the researcher, so treat their `PRIMARY` tags with more
+caution than a verified stage 4 finding.
 
 ## Writing tags
 

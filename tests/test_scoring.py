@@ -130,6 +130,12 @@ class ApplyTests(WorkspaceCase):
         self.assertEqual(scoring.reopen_branch(self.ws, "wire/framing")["proposals_restored"], 1)
         self.assertEqual({p["id"]: p["status"] for p in store.read_json(doc_path)["proposals"]}["sub"], "dropped")
 
+    def test_the_gate_names_the_proposals_it_dropped_so_the_user_can_reopen(self):
+        gate = self.apply()
+        self.assertEqual(gate["dropped"], [{"id": "d2", "title": "Resolve d2", "branch": "wire/framing",
+                                            "unknown": "The maximum frame length in bytes"}])
+        self.assertEqual(self.apply()["dropped"], gate["dropped"])
+
     def test_proposals_on_a_closed_branch_are_dropped(self):
         self.apply()
         doc = store.read_json(self.ws / "sessions" / self.session / "proposals" / "level_2.json")

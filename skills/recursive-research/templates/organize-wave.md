@@ -24,6 +24,24 @@ If `ledger.json` does not exist yet but the tree already holds findings from
 this session's raw files, an earlier run of this job was interrupted. Count
 those findings as **new**, not duplicate.
 
+Use each finding's `tier` as it stands in the raw file. A script has already
+checked every `PRIMARY` quote against its source and downgraded the ones it
+could not confirm; never raise a tier back.
+
+A JSON leaf must have exactly this `_meta` block, with both fields filled in:
+
+    {
+      "_meta": {
+        "provenance": "SECONDARY",
+        "source": "Where the values came from: a document and section, or a web address",
+        "last_updated": "YYYY-MM-DD"
+      },
+      "max_frame_bytes": 16384
+    }
+
+`_meta.provenance` is the weakest tier among the values in the file. If the
+values have different tiers, also give each entry its own `tier`.
+
 Follow the tree conventions: a `README.md` in every folder ending with
 `## Known Unknowns`; JSON leaves with `_meta.provenance` and `_meta.source`;
 Markdown leaves with tagged claims; file names that say what the file holds.

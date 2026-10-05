@@ -107,7 +107,11 @@ def _gate_summary(ws, session, names, blocked, dropped, already_applied):
         elif name not in blocked:
             still_open.append(name)
     pending = _pending(ws, session)
-    return {"session": session, "closed": closed, "open": still_open, "blocked": sorted(blocked),
+    dropped_now = [{"id": p.get("id"), "title": p.get("title"), "branch": p.get("branch"),
+                    "unknown": p.get("unknown_being_resolved")}
+                   for path in _proposal_files(ws, session)
+                   for p in read_json(path).get("proposals", []) if p.get("status") == "dropped"]
+    return {"dropped": dropped_now, "session": session, "closed": closed, "open": still_open, "blocked": sorted(blocked),
             "proposals_dropped": dropped, "proposals_pending": len(pending), "proposals": pending,
             "agents_per_batch": plan["controls"]["max_agents_per_wave"],
             "already_applied": already_applied}

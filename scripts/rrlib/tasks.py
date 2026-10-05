@@ -5,6 +5,7 @@ from pathlib import Path
 
 from .store import (RRError, STAGES, load_plan, read_json, save_plan, today, type_id, write_json,
                     write_text)
+from . import verify
 from .validate import (ID_RE, find_type, has_errors, validate_entity_file, validate_entity_schema,
                        validate_plan, validate_proposals, validate_raw, validate_tree)
 
@@ -240,6 +241,7 @@ def complete_task(ws, task_id, summary, session=None):
     if not output.is_file() or output.stat().st_size == 0:
         raise RRError(f"task {task_id} produced nothing at {task['output']}; use fail-task to record why")
     stage = doc["stage"]
+    quotes = None
     if stage == "entity_schema":
         issues = validate_entity_schema(read_json(output))
         if has_errors(issues):
@@ -254,6 +256,7 @@ def complete_task(ws, task_id, summary, session=None):
         if has_errors(issues):
             raise RRError(f"{task['output']} is not a valid result: {_errors(issues)}")
         task["verdict"] = raw["verdict"]
+        quotes = verify.verify_result(ws, session, task_id)
     elif stage == "deepening":
         issues = validate_tree(Path(ws) / "knowledge" / "tree")
         if has_errors(issues):
@@ -261,9 +264,16 @@ def complete_task(ws, task_id, summary, session=None):
     task["passes"] = True
     task["last_error"] = None
     write_json(session_dir(ws, session) / "tasks.json", doc)
+    result = {"completed": task_id, "verdict": task["verdict"],
+              "remaining": sum(1 for t in doc["tasks"] if not t["passes"])}
+    if quotes and (quotes["verified"] or quotes["downgraded"]):
+        plural = "" if quotes["verified"] == 1 else "s"
+        summary += f" ({quotes['verified']} quote{plural} verified, {quotes['downgraded']} downgraded)"
+    if quotes:
+        result.update(quotes_verified=quotes["verified"], quotes_downgraded=quotes["downgraded"],
+                      quote_notes=quotes["notes"])
     _log(ws, session, f"{task_id}: {summary}")
-    return {"completed": task_id, "verdict": task["verdict"],
-            "remaining": sum(1 for t in doc["tasks"] if not t["passes"])}
+    return result
 
 
 def fail_task(ws, task_id, reason, session=None):

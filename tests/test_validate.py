@@ -221,6 +221,14 @@ class TreeTests(WorkspaceCase):
         path.write_bytes("# Tree [PRIMARY]\n\n## Known Unknowns\n".encode("utf-16"))
         self.assertEqual(validate.validate_tree(self.ws / "knowledge" / "tree"), [])
 
+    def test_a_json_leaf_missing_provenance_and_source_is_told_both_at_once(self):
+        self.write("knowledge/tree/README.md", "# Tree [PRIMARY]\n\n## Known Unknowns\n")
+        self.write("knowledge/tree/frame_sizes.json", {"max": 9})
+        messages = errors(validate.validate_tree(self.ws / "knowledge" / "tree"))
+        self.assertEqual(len(messages), 1)
+        self.assertIn("_meta.provenance", messages[0])
+        self.assertIn("_meta.source", messages[0])
+
     def test_generic_file_names_get_a_warning(self):
         self.write("knowledge/tree/README.md", "# Tree [PRIMARY]\n\n## Known Unknowns\n")
         self.write("knowledge/tree/data.json", {"_meta": {"provenance": "UNKNOWN"}})

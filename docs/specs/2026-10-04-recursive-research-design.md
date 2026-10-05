@@ -36,6 +36,8 @@ right.
 - **How a source was read caps its tier.** Web tools return a model's summary,
   so anything learned only that way is at most `SECONDARY`, and a `PRIMARY`
   finding in stage 4 must carry the exact quote.
+- **Stage 4 quotes are checked by the script.** It fetches each `PRIMARY`
+  finding's source and downgrades the finding if the quote is not there.
 - **Remembered claims in the survey are `OBSERVED`.** In stages 3 and 4 they
   must be `UNKNOWN`.
 - **Rules are enforced in the script:** no research before the plan is

@@ -59,6 +59,11 @@ thing itself. `EXPERT` is people with direct access who verified it.
 `SECONDARY` is published writing about it. Put anything the user supplied
 locally under the tier it deserves.
 
+Where a subject has both an authoritative document and an informal one about
+the same thing, such as a specification and its non-normative overview, name
+them separately and give only the authoritative one `PRIMARY`. Researchers
+disagree about the informal one unless the plan settles it.
+
 `examples/games/plan-example.json` is a complete worked example for a video
 game. Use it to judge the level of detail, not as content to copy.
 

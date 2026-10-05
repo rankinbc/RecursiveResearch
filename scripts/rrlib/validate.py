@@ -261,10 +261,14 @@ def validate_tree(tree_dir):
                 issues.append(issue("error", rel, str(e)))
                 continue
             meta = doc.get("_meta") if isinstance(doc, dict) else None
-            if not isinstance(meta, dict) or meta.get("provenance") not in TIERS:
-                issues.append(issue("error", rel, f"needs _meta.provenance set to one of {', '.join(TIERS)}"))
-            elif meta["provenance"] != "UNKNOWN" and not _text(meta.get("source")):
-                issues.append(issue("error", rel, "needs _meta.source"))
+            meta = meta if isinstance(meta, dict) else {}
+            missing = []
+            if meta.get("provenance") not in TIERS:
+                missing.append(f"_meta.provenance set to one of {', '.join(TIERS)}")
+            if meta.get("provenance") != "UNKNOWN" and not _text(meta.get("source")):
+                missing.append("_meta.source saying where the values came from")
+            if missing:
+                issues.append(issue("error", rel, "needs " + " and ".join(missing)))
         elif path.suffix == ".md":
             scan = scan_markdown(read_text(path))
             if not sum(scan["counts"].values()):

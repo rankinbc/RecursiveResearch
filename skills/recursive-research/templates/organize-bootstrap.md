@@ -34,6 +34,20 @@ Also write `{{WORKSPACE}}/knowledge/tree/README.md`: what the subject is, how
 it works end to end, an index of the branches, and its own `## Known
 Unknowns`.
 
+A JSON leaf must have exactly this `_meta` block, with both fields filled in:
+
+    {
+      "_meta": {
+        "provenance": "SECONDARY",
+        "source": "Where the values came from: a document and section, or a web address",
+        "last_updated": "YYYY-MM-DD"
+      },
+      "max_frame_bytes": 16384
+    }
+
+`_meta.provenance` is the weakest tier among the values in the file. If the
+values have different tiers, also give each entry its own `tier`.
+
 Each unknown is one concrete fact someone could look up, such as "the
 maximum frame length in bytes". Not "more detail on framing".
 
