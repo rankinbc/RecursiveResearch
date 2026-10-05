@@ -109,7 +109,7 @@ Version 0.1.0, a pre-release. What has and has not been checked:
 - **Tests.** The bookkeeping script has a unit test suite that runs on
   Windows, macOS and Linux, on Python 3.9 and 3.13, on every push.
 - **Installing.** Adding the marketplace and installing from it was checked
-  from a local copy on Windows.
+  from this GitHub repository, on Windows.
 - **A real run.** One subject has been taken through all four stages and one
   research wave, on Windows. See `docs/end-to-end-run.md`.
 - **Holding its rules.** Four pressure scenarios pass, one of them only after
