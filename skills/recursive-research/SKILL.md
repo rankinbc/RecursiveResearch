@@ -108,6 +108,9 @@ command with the real script path:
 
     RR progress <slug> --watch
 
+At any point, `RR report <slug>` writes what exists so far as one readable
+page, `research/<slug>/report.html`. Offer it at each gate.
+
 ## Gates
 
 At a gate, show the user what they are approving, say what happens next and

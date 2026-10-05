@@ -77,6 +77,18 @@ name authoritative and informal documents separately.
 **Python 3.9 did not work.** Continuous integration, not the run, found a
 call that needs Python 3.10. Fixed; all six jobs pass.
 
+## Afterwards: the check extended to everything
+
+The quote check was later extended from stage 4 findings to the whole
+knowledge base, with evidence required on every `PRIMARY` claim. Run on a copy
+of this run's knowledge base, it confirmed 9 claims and downgraded 1,040.
+
+That is the expected result, not a regression. This run was done before
+evidence was required, so nearly all of its `PRIMARY` tags had no quote to
+check. The 9 that passed were tree entries where the organizer had happened to
+keep the quote and address. A run under the current rules has not yet been
+done, so the share of claims that survive the check in practice is not known.
+
 ## What is still unproven
 
 - **The closing thresholds.** Every branch in the one wave closed on its
@@ -84,14 +96,17 @@ call that needs Python 3.10. Fixed; all six jobs pass.
   numbers 3, 60% and 80% remain guesses.
 - **A second wave.** No branch stayed open, so nothing has gone two levels
   deep.
-- **The quote check in a live wave.** It was verified against wave 1's saved
-  results, not during a run. Researchers have not yet been asked for
-  `source_url`.
+- **The quote check in a live run.** It was verified against this run's saved
+  results, not during a run. Researchers have not yet been asked to supply
+  evidence in the survey, the catalogue or the tree, so it is not known how
+  well they do it.
+- **The report on a large knowledge base.** It was generated from this run's
+  1,770 claims (a 450 KB page) and looked at in both themes. Nothing larger
+  has been tried.
 - **Large waves.** The largest had four tasks. One organizer per wave may not
   hold up at twenty.
 - **Other platforms.** The tests pass on macOS and Linux; no research has
   been run there.
-- **Survey and entity tiers.** They are not checked by the script.
 
 ## Sources the researchers could not reach
 

@@ -4,9 +4,9 @@
 [Claude Code](https://claude.com/claude-code).
 
 Name a subject. Claude researches it in depth and leaves you a structured
-knowledge base in your project folder. Every claim says how well it is
-supported, and the top-tier findings in the deep layer are checked against
-their source.
+knowledge base in your project folder, plus a report you can open in a
+browser. Every claim says how well it is supported, and every top-tier claim
+is checked against its source by a script.
 
     /plugin marketplace add rankinbc/RecursiveResearch
     /plugin install recursive-research@recursive-research
@@ -24,9 +24,15 @@ trust. This gives you something you can build on:
   matters for your goal. You are not paying for research that has run dry.
 - **Every claim is graded.** Six tiers, from `PRIMARY` (the source itself)
   down to `UNKNOWN`. A missing value is recorded as missing rather than guessed.
-- **Quotes are verified.** In the deepening stage, the script opens each
-  cited page itself and looks for the quoted words. A quote that is not there
+- **Top-tier claims are verified.** A `PRIMARY` claim has to carry the exact
+  words and where they are. A script opens that page itself and looks for
+  them, in the survey, the catalogue and the tree alike. A claim that fails
   loses its top tier, with the reason recorded.
+- **A report you can read and share.** One command turns the whole knowledge
+  base into a single HTML page: a scorecard, the tree, the catalogue as
+  tables, and every verified claim linked to its source.
+- **A scorecard.** How many claims, how many verified, how many still unknown
+  and how many in conflict, overall and for each branch.
 - **You stay in control of cost.** You approve the plan, the list of things to
   catalogue, and each round of deeper research, and each approval tells you
   how many agents it will run.
@@ -92,6 +98,7 @@ lists what closed and why, and you can reopen any branch.
 
     research/<subject>/
       plan.json                  the approved plan
+      report.html                everything below as one page, with a scorecard
       knowledge/
         spec.md                  the survey: a readable overview
         entities.json            what kinds of thing exist
@@ -210,15 +217,41 @@ A branch closes on its own when:
 Each approval point is also a safe place to start a fresh session, which keeps
 long runs cheap.
 
-## Which claims to lean on
+## Reading the result
 
-The tree is the verified layer. A `PRIMARY` finding there carries the exact
-quote and its address, and the script has opened that address and found the
-words. Findings it could not confirm are marked as such, with the reason.
+    python /path/to/RecursiveResearch/scripts/rr.py --root research report <subject>
 
-The survey and the catalogue are the map that gets you there. Their tiers are
-assigned by the researchers under the same rules, without the script's check.
-Use them to find your way, and use the tree for anything exact.
+This writes `research/<subject>/report.html`, one self-contained file with no
+external resources, so it opens offline and can be sent to someone as it is.
+Claude runs it for you at the end and offers it at each approval point.
+
+- **Scorecard.** Headline numbers, then a bar for each part of the knowledge
+  base showing how its claims divide between the tiers.
+- **Conflicts.** Every place where sources of equal standing disagree.
+- **Knowledge tree.** Each branch with its status, why it closed, its
+  overview, and its data as tables.
+- **Catalogue.** A table per kind of thing. The coloured edge of each cell is
+  its tier, and a tick links to the passage that states the value.
+- **Survey** and **remaining unknowns.**
+
+It follows your system's light or dark theme.
+
+## What "verified" means
+
+A `PRIMARY` claim must carry its evidence: the exact words and the address of
+the page they are on.
+
+    The frame limit is 16384 bytes [PRIMARY: "A frame MUST NOT exceed 16384 bytes." https://example.org/spec].
+
+The script opens that address itself and looks for those words. For a number
+in the catalogue it also checks that the number is in the quote. A claim that
+passes is shown as `PRIMARY ✓` and links to its source. One that fails is
+downgraded to `SECONDARY` with the reason: no quote, quote not found, or
+source not reachable.
+
+The check runs every time something is added to the knowledge base, so every
+`PRIMARY` in it has been confirmed. Nothing is top-tier on a researcher's
+say-so.
 
 ## What is in the repository
 
