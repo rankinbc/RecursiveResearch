@@ -1,0 +1,133 @@
+{
+  "_about": "Worked example of the plan fields intake generates, for a video game. Tasks marked customize are replaced with the game's own systems.",
+  "goal": "Document the game precisely enough that a developer could rebuild its systems",
+  "voice": "A game designer documenting specs, not an encyclopedia entry: specific numbers, tables for comparisons, and design rationale",
+  "precision_bar": "Exact stats, costs, formulas and timings; approximate values are marked as such",
+  "definition_of_done": "Every major system has its formulas and data tables, and what remains unknown is listed with the reason",
+  "survey_tasks": [
+    {
+      "title": "Game Overview & History",
+      "description": "Developer background, release year and context, platform, development story, reception, legacy and cultural impact",
+      "customize": false
+    },
+    {
+      "title": "Core Gameplay Loop",
+      "description": "Primary gameplay structure, how a typical session flows, what the player actually does moment-to-moment, the core engagement loop",
+      "customize": false
+    },
+    {
+      "title": "Core System 1",
+      "description": "Replace with the game's primary system (e.g., combat, exploration, building, puzzle-solving)",
+      "customize": true
+    },
+    {
+      "title": "Core System 2",
+      "description": "Replace with a major game system (e.g., world/setting, factions, character progression)",
+      "customize": true
+    },
+    {
+      "title": "Core System 3",
+      "description": "Replace with a major game system (e.g., equipment, ships, resources, magic)",
+      "customize": true
+    },
+    {
+      "title": "Core System 4",
+      "description": "Replace with a major game system",
+      "customize": true
+    },
+    {
+      "title": "Secondary System 1",
+      "description": "Replace with a supporting system (e.g., economy, crafting, dialogue)",
+      "customize": true
+    },
+    {
+      "title": "Secondary System 2",
+      "description": "Replace with a supporting system",
+      "customize": true
+    },
+    {
+      "title": "Secondary System 3",
+      "description": "Replace with a supporting system",
+      "customize": true
+    },
+    {
+      "title": "Narrative/Story",
+      "description": "Replace with story structure, characters, narrative design, branching paths if applicable",
+      "customize": true
+    },
+    {
+      "title": "World/Level Design",
+      "description": "Replace with world structure, level design, navigation, areas, progression gates",
+      "customize": true
+    },
+    {
+      "title": "Enemies/Challenges",
+      "description": "Replace with opposition design -- enemies, bosses, obstacles, difficulty drivers",
+      "customize": true
+    },
+    {
+      "title": "Progression & Economy",
+      "description": "Replace with how the player grows stronger -- leveling, unlocks, currency, upgrades",
+      "customize": true
+    },
+    {
+      "title": "Unique Feature",
+      "description": "Replace with the game's most distinctive or innovative system (e.g., time travel, modding, multiplayer)",
+      "customize": true
+    },
+    {
+      "title": "Technical Design",
+      "description": "Engine/hardware capabilities, rendering approach, sound/music design, save system, performance characteristics",
+      "customize": false
+    },
+    {
+      "title": "UI & Controls",
+      "description": "Control scheme, HUD elements, menu systems, how the game communicates information to the player, feedback systems",
+      "customize": false
+    },
+    {
+      "title": "Difficulty & Game Feel",
+      "description": "Difficulty curve, balance analysis, common sticking points, skill vs progression, how the game 'feels' to play",
+      "customize": false
+    },
+    {
+      "title": "Additional Topic",
+      "description": "Replace with another notable aspect -- could be multiplayer, modding, distribution model, accessibility, or merge with another task if 18 topics suffice",
+      "customize": true
+    },
+    {
+      "title": "Comparison to Contemporaries",
+      "description": "How this game compared to peers of its era, what made it unique, where contemporaries excelled instead",
+      "customize": false
+    },
+    {
+      "title": "Design Lessons & Influence",
+      "description": "What the game pioneered, lasting design principles, influence on later games, why it's remembered or forgotten",
+      "customize": false
+    }
+  ],
+  "entity_types": [
+    "Weapon",
+    "Enemy",
+    "Item",
+    "CharacterClass",
+    "Region"
+  ],
+  "provenance_mapping": {
+    "PRIMARY": [
+      "ROM or binary disassembly",
+      "data extracted by randomizer or modding tools",
+      "the game's own data files"
+    ],
+    "EXPERT": [
+      "speedrun and TAS documentation",
+      "modder and datamining write-ups"
+    ],
+    "SECONDARY": [
+      "published strategy guides",
+      "GameFAQs and StrategyWiki",
+      "fan wikis",
+      "the manual"
+    ]
+  }
+}
