@@ -50,5 +50,15 @@ Tiers, strongest first: `PRIMARY`, `EXPERT`, `SECONDARY`, `INFERRED`,
 
 {{PROVENANCE_MAPPING}}
 
+**How you read a source limits its tier.** The web tools return a summary
+written by a model, not the page's own text. A claim you learned only through
+a web fetch or a search result is at most `SECONDARY`, even when the page is
+the specification itself. `PRIMARY` is only for text you read directly: a
+local file you opened, or a passage you can copy word for word from what the
+tool returned. When you are not sure the words are the source's own, use the
+lower tier.
+
+If a value is `PRIMARY`, say in `notes` where its exact words can be found.
+
 Completeness matters, but not more than accuracy. A `null` is correct when
 you do not know. An invented value is a defect.

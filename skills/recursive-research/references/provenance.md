@@ -28,6 +28,18 @@ the most similar source that is, and name the source exactly.
   finding. In stage 1 it may be written as `OBSERVED`. In stages 3 and 4 it
   must be recorded as `UNKNOWN`.
 
+## How you read a source limits its tier
+
+The mapping gives the tier a source deserves when it is read directly. The
+web tools do not do that: they return a summary written by a model, not the
+page's own text. So a claim learned only through a web fetch or a search
+result is at most `SECONDARY`, even when the page is the primary source.
+
+`PRIMARY` is only for text read directly: a local file, or a passage copied
+word for word. In stage 4 every `PRIMARY` finding carries that passage as a
+`quote`, and the script rejects one without it. The script cannot check the
+quote against the source, so treat `PRIMARY` as "quoted", not as "verified".
+
 ## Writing tags
 
 In Markdown, put the tag after the claim:

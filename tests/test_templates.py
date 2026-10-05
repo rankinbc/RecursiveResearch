@@ -27,6 +27,16 @@ class TemplateTests(unittest.TestCase):
         listed = set(re.findall(r"^\| `([a-z]+)` \|", template("research-deepening.md"), re.MULTILINE))
         self.assertEqual(listed, set(validate.VERDICTS))
 
+    def test_every_research_brief_caps_what_a_summarizing_fetch_can_claim(self):
+        for name in ("research-survey.md", "research-entity.md", "research-deepening.md"):
+            self.assertIn("at most `SECONDARY`", template(name), name)
+        self.assertIn("`quote`", template("research-deepening.md"))
+
+    def test_the_provenance_reference_explains_the_cap(self):
+        text = (SKILL / "references" / "provenance.md").read_text(encoding="utf-8")
+        self.assertIn("at most `SECONDARY`", text)
+        self.assertIn("summary written by a model", text)
+
     def test_agents_are_not_invited_to_read_whole_large_files(self):
         self.assertIn("Do not read the whole file", template("research-entity.md"))
         self.assertIn("Do not open the roster files", template("organize-bootstrap.md"))

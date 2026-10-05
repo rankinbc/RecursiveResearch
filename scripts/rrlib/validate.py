@@ -171,6 +171,9 @@ def validate_raw(doc, task_id=None):
             continue
         if finding.get("tier") not in TIERS or finding.get("tier") == "UNKNOWN":
             issues.append(issue("error", where, "needs a tier; list unknowns under unknowns_remaining instead"))
+        elif finding["tier"] == "PRIMARY" and not _text(finding.get("quote")):
+            issues.append(issue("error", where,
+                                "a PRIMARY finding needs a quote: the exact words copied from the source"))
         if not _text(finding.get("source")):
             issues.append(issue("error", where, "needs a source"))
     for key in ("unknowns_resolved", "unknowns_opened", "unknowns_remaining", "sources_searched", "proposals"):

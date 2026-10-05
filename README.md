@@ -69,6 +69,14 @@ A branch closes on its own when:
 
 Each gate lists what closed and why, and you can reopen any branch.
 
+## How far to trust the tiers
+
+Web tools return a model's summary of a page, not its text. The briefs
+therefore cap anything learned only that way at `SECONDARY`, and a `PRIMARY`
+finding in stage 4 must carry the exact quote. The script checks that the
+quote is present; it cannot check it against the source. Before relying on an
+exact limit or wording, read the source yourself.
+
 ## Status
 
 The bookkeeping script and the plugin files are implemented and unit-tested.

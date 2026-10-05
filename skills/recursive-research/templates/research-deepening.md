@@ -33,7 +33,8 @@ Write JSON to `{{WORKSPACE}}/{{OUTPUT}}` in exactly this shape:
       "verdict_reason": "",
       "findings": [
         {"claim": "The maximum frame length is 16384 bytes", "tier": "PRIMARY",
-         "source": "RFC 9999, section 4.2", "detail": ""}
+         "source": "RFC 9999, section 4.2",
+         "quote": "A frame MUST NOT exceed 16384 bytes.", "detail": ""}
       ],
       "unknowns_resolved": ["The maximum frame length in bytes"],
       "unknowns_opened": ["Whether extension frames may exceed the maximum"],
@@ -55,6 +56,17 @@ Tiers, strongest first: `PRIMARY`, `EXPERT`, `SECONDARY`, `INFERRED`,
 `OBSERVED`. For this subject:
 
 {{PROVENANCE_MAPPING}}
+
+**How you read a source limits its tier.** The web tools return a summary
+written by a model, not the page's own text. A claim you learned only through
+a web fetch or a search result is at most `SECONDARY`, even when the page is
+the specification itself. `PRIMARY` is only for text you read directly: a
+local file you opened, or a passage you can copy word for word from what the
+tool returned. When you are not sure the words are the source's own, use the
+lower tier.
+
+Every `PRIMARY` finding must carry a `quote`: the exact words, copied from
+the source, that state the fact. A `PRIMARY` finding without one is rejected.
 
 ## Verdict
 

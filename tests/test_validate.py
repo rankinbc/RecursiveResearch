@@ -131,8 +131,17 @@ class RawTests(unittest.TestCase):
         doc = raw_result("p1")
         doc["findings"] = [{"claim": "", "tier": "PRIMARY", "source": "x"},
                            {"claim": "a", "tier": "UNKNOWN", "source": "x"},
-                           {"claim": "b", "tier": "PRIMARY", "source": " "}]
+                           {"claim": "b", "tier": "PRIMARY", "source": " ", "quote": "q"}]
         self.assertEqual(len(errors(validate.validate_raw(doc))), 3)
+
+    def test_a_primary_finding_needs_the_exact_quote_but_other_tiers_do_not(self):
+        doc = raw_result("p1")
+        doc["findings"][0]["quote"] = "  "
+        self.assertEqual(len(errors(validate.validate_raw(doc))), 1)
+        self.assertIn("quote", errors(validate.validate_raw(doc))[0])
+        doc["findings"][0]["tier"] = "SECONDARY"
+        del doc["findings"][0]["quote"]
+        self.assertEqual(validate.validate_raw(doc), [])
 
     def test_a_result_that_is_not_an_object_is_an_error(self):
         self.assertTrue(errors(validate.validate_raw(["nope"])))

@@ -56,7 +56,8 @@ def raw_result(task_id, verdict="continue", tiers=("PRIMARY", "PRIMARY", "PRIMAR
     doc = {
         "task_id": task_id,
         "verdict": verdict,
-        "findings": [{"claim": f"fact {i}", "tier": t, "source": "the RFC"} for i, t in enumerate(tiers)],
+        "findings": [{"claim": f"fact {i}", "tier": t, "source": "the RFC", "quote": "exact words"}
+                     for i, t in enumerate(tiers)],
         "unknowns_resolved": ["one"],
         "unknowns_opened": [],
         "unknowns_remaining": ["the retry timeout"] if verdict != "exhausted" else [],

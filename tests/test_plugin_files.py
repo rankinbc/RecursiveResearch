@@ -29,6 +29,10 @@ class PluginFileTests(unittest.TestCase):
             self.assertEqual(meta["name"], name)
             self.assertTrue(meta["description"])
 
+    def test_researcher_is_told_what_a_summarizing_fetch_can_claim(self):
+        text = (REPO / "agents" / "researcher.md").read_text(encoding="utf-8")
+        self.assertIn("at most `SECONDARY`", text)
+
     def test_researcher_can_search_but_cannot_edit_or_run_commands(self):
         self.assertEqual(tools(REPO / "agents" / "researcher.md"),
                          {"Read", "Glob", "Grep", "WebSearch", "WebFetch", "Write"})
