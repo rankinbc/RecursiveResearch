@@ -1,0 +1,16 @@
+{
+  "name": "recursive-research",
+  "owner": {
+    "name": "rankinbc1"
+  },
+  "metadata": {
+    "description": "The recursive-research plugin, installable straight from its repository."
+  },
+  "plugins": [
+    {
+      "name": "recursive-research",
+      "source": "./",
+      "description": "Research a subject to a chosen depth and leave behind a structured, source-tagged knowledge base."
+    }
+  ]
+}

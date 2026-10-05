@@ -1,7 +1,45 @@
 # RecursiveResearch -- Design
 
 Date: 2026-10-04
-Status: awaiting review
+Status: implemented, with the changes listed below
+
+## Changes since this design
+
+The design below is as originally agreed. Building and running it changed
+these points. Where a section below disagrees with this list, the list is
+right.
+
+- **One script, not several.** All bookkeeping is `scripts/rr.py` with
+  subcommands. Beyond those in "State and scripts" it has `approve`,
+  `retry-task`, `set-stage`, `promote-entity`, `snapshot`, `check-snapshot`,
+  `reopen-branch`, `brief`, `assemble-survey`, `approve-proposals`,
+  `consolidate`, and `progress`.
+- **Briefs are rendered by the script.** The coordinator passes each agent
+  the path of its filled-in brief and never fills a template by hand.
+- **Entity rosters go through `raw/`.** A researcher writes its roster to
+  `raw/`; the script validates it and copies it into `knowledge/entities/`.
+- **The survey is assembled by the script.** The organizer reviews
+  `spec.md` and edits it in place.
+- **The script closes branches.** The organizer records each finding as new,
+  duplicate, or conflict in a ledger; the script counts and applies the
+  thresholds. A session is scored once, so repeating the step is safe.
+- **Branches close one at a time.** Closing a branch does not close its
+  sub-branches.
+- **The "few new facts" rule also needs no unknowns resolved.** Each task
+  resolves one unknown, so a low count alone does not mean a dry branch.
+- **A `continue` verdict needs a proposal** naming a concrete unknown.
+- **Depth is the wave level.** A proposal's level is its parent task's level
+  plus one.
+- **Researcher writes to `knowledge/` are detected, not prevented.** Tool
+  access cannot restrict a path, so the script compares `knowledge/` before
+  and after each research batch.
+- **How a source was read caps its tier.** Web tools return a model's summary,
+  so anything learned only that way is at most `SECONDARY`, and a `PRIMARY`
+  finding in stage 4 must carry the exact quote.
+- **Remembered claims in the survey are `OBSERVED`.** In stages 3 and 4 they
+  must be `UNKNOWN`.
+- **Rules are enforced in the script:** no research before the plan is
+  approved, stages in order, and no task marked done without valid output.
 
 ## Purpose
 

@@ -12,7 +12,13 @@ dry.
 
 ## Install
 
-Load it for one session:
+The repository is its own plugin marketplace. From a clone, inside Claude
+Code:
+
+    /plugin marketplace add /path/to/RecursiveResearch
+    /plugin install recursive-research@recursive-research
+
+To try it for one session without installing:
 
     claude --plugin-dir /path/to/RecursiveResearch
 
@@ -79,13 +85,20 @@ exact limit or wording, read the source yourself.
 
 ## Status
 
-The bookkeeping script and the plugin files are implemented and unit-tested.
-The plugin has not yet been run end to end on a real subject, and its prompts
-have not been pressure-tested; see Tasks 4 and 5 in
-`docs/plans/2026-10-05-skill-layer.md`.
+Version 0.1.0, a pre-release.
+
+- The bookkeeping script is unit-tested on Windows. A CI job is set up to run
+  the tests on Windows, macOS and Linux, on Python 3.9 and 3.13; it has not
+  run yet.
+- Installing from the marketplace has been checked on Windows.
+- One real subject has been taken through all four stages on Windows.
+- The closing thresholds are first guesses and have had little real use.
+- The prompts have not been pressure-tested, for example against being told
+  to skip an approval.
 
 ## Development
 
     python -m unittest discover -s tests
 
-Design: `docs/specs/2026-10-04-recursive-research-design.md`.
+Design, and what changed while building it:
+`docs/specs/2026-10-04-recursive-research-design.md`.

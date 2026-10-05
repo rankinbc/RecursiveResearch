@@ -1,0 +1,3 @@
+# Keep one line ending everywhere. The tests compare template text exactly,
+# and the scripts must run unchanged on Windows, macOS and Linux.
+* text=auto eol=lf
