@@ -7,8 +7,9 @@ WEAK = ("INFERRED", "OBSERVED")
 MAPPED_TIERS = ("PRIMARY", "EXPERT", "SECONDARY")
 
 # [PRIMARY], [UNKNOWN: est 3-5] or [PRIMARY: "exact quote" https://address]. Group 2 is the
-# text after the colon, which may wrap across lines. The lookahead skips links like [API](url).
-TAG_RE = re.compile(r"\[([A-Z][A-Z_]+)(?::([^\]]*))?\](?!\()")
+# text after the colon, which may wrap across lines. A quote that opens that text may contain
+# square brackets; anywhere else a "]" ends the tag. The lookahead skips links like [API](url).
+TAG_RE = re.compile(r"\[([A-Z][A-Z_]+)(?::(\s*(?:\"[^\"]*\"|“[^”]*”)?[^\]]*))?\](?!\()")
 
 
 def stronger(a, b):

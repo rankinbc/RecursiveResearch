@@ -60,6 +60,10 @@ class MarkdownTests(unittest.TestCase):
         self.assertIn('<a class="tier t-primary verified" href="https://example.org/spec" rel="noopener noreferrer" '
                       'title="“A frame MUST NOT exceed 16384 bytes.”">PRIMARY ✓</a>', out)
 
+    def test_a_quote_with_square_brackets_stays_inside_its_badge(self):
+        out = self.html('Form [PRIMARY: "The header is name [SP value] CRLF." https://example.org/spec].\n')
+        self.assertIn('title="“The header is name [SP value] CRLF.”">PRIMARY ✓</a>.</p>', out)
+
     def test_primary_in_an_unchecked_file_is_not_shown_as_verified(self):
         out = self.html('Cap [PRIMARY: "A frame MUST NOT exceed 16384 bytes." https://example.org/spec].\n', checked=False)
         self.assertNotIn("verified", out)

@@ -47,8 +47,7 @@ double quotes, then the address of the page they are on.
 
 A script opens that address and looks for those words. A `PRIMARY` tag with no
 quote, or whose words are not on that page, is rewritten as `SECONDARY`. So
-quote only words you can see, cite the page they are actually on, and avoid
-passages that contain square brackets.
+quote only words you can see, and cite the page they are actually on.
 
 End the section with a `### Open questions` list of specific facts you could
 not find.

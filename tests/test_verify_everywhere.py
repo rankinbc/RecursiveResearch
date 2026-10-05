@@ -39,6 +39,23 @@ class MarkdownTests(Base):
         self.assertEqual(result["downgraded"], 1)
         self.assertEqual(after, "The cap is 16384 bytes [SECONDARY: was PRIMARY, no quote given]. Vendors agree [SECONDARY].\n")
 
+    def test_a_quote_may_contain_square_brackets(self):
+        page = self.write("local/grammar.html", "<p>The header is name [SP value] CRLF and nothing else.</p>").as_posix()
+        text = f'Header form [PRIMARY: "The header is name [SP value] CRLF and nothing else." {page}]. Next [SECONDARY].\n'
+        result, after = self.check(text)
+        self.assertEqual((result["verified"], result["downgraded"]), (1, 0))
+        self.assertEqual(after, text)
+
+    def test_a_failed_quote_with_square_brackets_is_replaced_whole(self):
+        result, after = self.check(f'Form [PRIMARY: "The header is name [SP other] CRLF and so on." {self.src}]. Next [EXPERT].\n')
+        self.assertEqual(after, "Form [SECONDARY: was PRIMARY, quote not found in source]. Next [EXPERT].\n")
+
+    def test_a_stray_quote_mark_in_a_note_does_not_swallow_the_next_tag(self):
+        text = 'Pipe [UNKNOWN: about 3" wide]. Then "quoted" words [PRIMARY].\n'
+        result, after = self.check(text)
+        self.assertEqual(result["downgraded"], 1)
+        self.assertEqual(after, 'Pipe [UNKNOWN: about 3" wide]. Then "quoted" words [SECONDARY: was PRIMARY, no quote given].\n')
+
     def test_a_tag_wrapped_across_lines_is_still_read(self):
         text = f'The cap [PRIMARY: "A frame MUST NOT\nexceed 16384 bytes."\n{self.src}] holds.\n'
         result, after = self.check(text)
