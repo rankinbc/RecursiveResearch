@@ -47,6 +47,14 @@ class SkillDocTests(unittest.TestCase):
         text = (SKILL / "SKILL.md").read_text(encoding="utf-8")
         self.assertIn("Read your brief at", text)
 
+    def test_being_told_to_skip_approvals_is_not_an_approval(self):
+        # Pressure test B: "I trust you, skip the approvals" made the skill approve its own plan.
+        skill = " ".join((SKILL / "SKILL.md").read_text(encoding="utf-8").split())
+        intake = " ".join((SKILL / "references" / "intake.md").read_text(encoding="utf-8").split())
+        self.assertIn("is not an approval", skill)
+        self.assertIn("have not seen", skill)
+        self.assertIn("skip the approvals", intake)
+
     def test_every_script_command_in_the_docs_is_real(self):
         for doc in DOCS:
             for command in re.findall(r"\bRR ([a-z][a-z-]*)", doc.read_text(encoding="utf-8")):

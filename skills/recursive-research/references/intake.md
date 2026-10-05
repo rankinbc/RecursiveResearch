@@ -85,7 +85,12 @@ Show the user the plan in readable form, not as raw JSON:
   task, at most the agent cap at a time
 
 Ask them to approve or change it. Apply changes, validate again, and show the
-changed parts again. When they approve:
+changed parts again.
+
+If the user told you up front to skip the approvals, still show the plan and
+wait. Say that it is one short confirmation and that it decides how many
+agents will run. Do not record an approval they have not given after seeing
+the plan. When they approve:
 
     RR approve <slug> plan
 

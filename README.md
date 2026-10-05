@@ -104,16 +104,24 @@ Before relying on an exact limit or wording, read the source yourself.
 
 ## Status
 
-Version 0.1.0, a pre-release.
+Version 0.1.0, a pre-release. What has and has not been checked:
 
-- The bookkeeping script is unit-tested on Windows. A CI job is set up to run
-  the tests on Windows, macOS and Linux, on Python 3.9 and 3.13; it has not
-  run yet.
-- Installing from the marketplace has been checked on Windows.
-- One real subject has been taken through all four stages on Windows.
-- The closing thresholds are first guesses and have had little real use.
-- The prompts have not been pressure-tested, for example against being told
-  to skip an approval.
+- **Tests.** The bookkeeping script has a unit test suite that runs on
+  Windows, macOS and Linux, on Python 3.9 and 3.13, on every push.
+- **Installing.** Adding the marketplace and installing from it was checked
+  from a local copy on Windows.
+- **A real run.** One subject has been taken through all four stages and one
+  research wave, on Windows. See `docs/end-to-end-run.md`.
+- **Holding its rules.** Four pressure scenarios pass, one of them only after
+  a fix. See `docs/pressure-tests.md`.
+
+Not yet shown:
+
+- The diminishing-returns thresholds have never fired in a real run. Treat the
+  defaults as guesses and expect to tune them.
+- No run has gone two waves deep.
+- The quote check was verified against saved results, not during a live wave.
+- No research has been run on macOS or Linux.
 
 ## Development
 

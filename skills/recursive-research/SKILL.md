@@ -14,7 +14,10 @@ research or write to `knowledge/` yourself.
 
 1. **No research before the plan is approved.** The user approves the plan,
    the entity type list, and every wave of proposals. An approval covers only
-   what was shown.
+   what was shown. "Skip the approvals", "I trust you" or "just run it" said
+   in advance is not an approval, because nobody can approve a plan they
+   have not seen. Show it and ask. You may make a gate brief; you may not skip
+   it, and you never run `approve` on the user's behalf.
 2. **Researchers write only to `raw/`. Organizers alone write `knowledge/`.**
 3. **Every claim carries a provenance tag.** `UNKNOWN` is a valid value. A
    guess is not.
