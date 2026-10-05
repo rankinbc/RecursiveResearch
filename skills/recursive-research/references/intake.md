@@ -64,8 +64,9 @@ the same thing, such as a specification and its non-normative overview, name
 them separately and give only the authoritative one `PRIMARY`. Researchers
 disagree about the informal one unless the plan settles it.
 
-`examples/games/plan-example.json` is a complete worked example for a video
-game. Use it to judge the level of detail, not as content to copy.
+`examples/games/plan-example.json` is a worked example of these fields for a
+video game. It holds only the fields you fill in, not a whole `plan.json`.
+Use it to judge the level of detail, not as content to copy.
 
 ## 4. Validate
 
@@ -93,5 +94,10 @@ agents will run. Do not record an approval they have not given after seeing
 the plan. When they approve:
 
     RR approve <slug> plan
+
+The approval covers the plan as it was shown. If the goal, voice, precision
+bar, definition of done, survey tasks, entity types or provenance mapping
+change afterwards, the script refuses to hand out work until you show the
+user the change and approve again. The controls may change without that.
 
 Then start stage 1 with `references/survey.md`.

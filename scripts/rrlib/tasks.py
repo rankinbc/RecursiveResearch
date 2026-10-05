@@ -1,4 +1,6 @@
 """Sessions and their task lists: create, hand out, complete, fail."""
+import hashlib
+import json
 import shutil
 from datetime import datetime
 from pathlib import Path
@@ -9,6 +11,9 @@ from . import verify
 from .validate import (ID_RE, find_type, has_errors, validate_entity_file, validate_entity_schema,
                        validate_plan, validate_proposals, validate_raw, validate_tree)
 
+# What the user approves at the plan gate. Controls and bookkeeping may change afterwards.
+APPROVED_FIELDS = ("goal", "voice", "precision_bar", "definition_of_done", "survey_tasks", "entity_types",
+                   "provenance_mapping")
 MAX_ATTEMPTS = 2  # one try plus one retry; after that the task is reported as blocked
 
 SCHEMA_TASK = {
@@ -56,20 +61,45 @@ def _errors(issues):
     return "; ".join(f"{i['where']}: {i['message']}" for i in issues if i["level"] == "error")
 
 
+def _digest(value):
+    return hashlib.sha256(json.dumps(value, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()[:16]
+
+
+def _plan_digests(plan):
+    return {field: _digest(plan.get(field)) for field in APPROVED_FIELDS}
+
+
 def approve(ws, what):
-    """Record a user approval. Refuses while the thing being approved is invalid."""
+    """Record a user approval and what exactly was approved. Refuses while it is invalid."""
     plan = load_plan(ws)
     if what == "plan":
         issues = validate_plan(plan)
+        seen = _plan_digests(plan)
     elif what == "entity_types":
-        issues = validate_entity_schema(read_json(Path(ws) / "knowledge" / "entities.json"))
+        schema = read_json(Path(ws) / "knowledge" / "entities.json")
+        issues = validate_entity_schema(schema)
+        seen = _digest(schema)
     else:
         raise RRError(f"cannot approve {what!r}; expected plan or entity_types")
     if has_errors(issues):
         raise RRError(f"cannot approve {what}: {_errors(issues)}")
     plan["approvals"][what] = True
+    plan["approvals"][f"{what}_seen"] = seen
     save_plan(ws, plan)
     return {"approved": what}
+
+
+def require_plan_approval(plan):
+    """Refuse to go on unless the plan is approved and is still the plan the user approved."""
+    if not plan["approvals"]["plan"]:
+        raise RRError("the plan is not approved yet; no research may start")
+    seen = plan["approvals"].get("plan_seen")
+    if not isinstance(seen, dict):
+        return  # approved before changes were tracked
+    changed = [field for field, digest in _plan_digests(plan).items() if seen.get(field) != digest]
+    if changed:
+        raise RRError(f"plan.json has changed since the user approved it: {', '.join(changed)}. "
+                      "Show the user the change, then run approve again")
 
 
 def default_tasks(ws, stage):
@@ -112,13 +142,17 @@ def add_session(ws, stage, tasks=None):
     if stage not in STAGES:
         raise RRError(f"unknown stage {stage!r}; expected one of {', '.join(STAGES)}")
     plan = load_plan(ws)
-    if not plan["approvals"]["plan"]:
-        raise RRError("the plan is not approved yet; no research may start")
+    require_plan_approval(plan)
     for earlier in STAGES[:STAGES.index(stage)]:
         if plan["stages"][earlier] != "done":
             raise RRError(f"the {earlier} stage is not done yet; stages run in order")
-    if stage == "entity_enumeration" and not plan["approvals"]["entity_types"]:
-        raise RRError("the entity type list is not approved yet")
+    if stage == "entity_enumeration":
+        if not plan["approvals"]["entity_types"]:
+            raise RRError("the entity type list is not approved yet")
+        seen = plan["approvals"].get("entity_types_seen")
+        if seen and seen != _digest(read_json(Path(ws) / "knowledge" / "entities.json")):
+            raise RRError("knowledge/entities.json has changed since the user approved it. "
+                          "Show the user the list again, then run approve again")
     if tasks is None:
         tasks = default_tasks(ws, stage)
     if not tasks:
@@ -187,6 +221,8 @@ def next_tasks(ws, limit=None, session=None, mark=False):
     """
     session = session or current_session(ws)
     doc = load_tasks(ws, session)
+    if mark:
+        require_plan_approval(load_plan(ws))
     if limit is None:
         limit = load_plan(ws)["controls"]["max_agents_per_wave"]
     if limit < 1:

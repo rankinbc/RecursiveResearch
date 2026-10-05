@@ -67,6 +67,13 @@ class CliTests(unittest.TestCase):
         code, out = self.rr("status")
         self.assertEqual([s["slug"] for s in out["subjects"]], ["wire-protocol"])
 
+    def test_a_mistyped_command_exits_2_with_a_json_error(self):
+        for args in (("frobnicate", "x"), ("approve", "x", "everything"), ("next-task",)):
+            code, out = self.rr(*args)
+            self.assertEqual(code, 2, args)
+            self.assertTrue(out["error"], args)
+        self.assertIn("frobnicate", self.rr("frobnicate", "x")[1]["error"])
+
     def test_unknown_workspace_exits_2_with_a_json_error(self):
         code, out = self.rr("status", "nope")
         self.assertEqual(code, 2)

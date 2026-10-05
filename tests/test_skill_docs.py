@@ -13,6 +13,24 @@ DOCS = [SKILL / "SKILL.md", *sorted((SKILL / "references").glob("*.md"))]
 COMMANDS = set(rr.build_parser()._subparsers._group_actions[0].choices)
 
 
+class ReviewWordingTests(unittest.TestCase):
+    def read(self, name):
+        return (SKILL / "references" / name).read_text(encoding="utf-8")
+
+    def test_the_plan_example_is_described_as_the_fragment_it_is(self):
+        text = self.read("intake.md")
+        self.assertNotIn("complete worked example", text)
+        self.assertIn("plan-example.json", text)
+
+    def test_the_schema_gate_says_whose_edit_it_is_and_that_approval_locks_it(self):
+        text = " ".join(self.read("entity-schema.md").split())
+        self.assertIn("the one file under `knowledge/` you edit yourself", text)
+        self.assertIn("approve again", text)
+
+    def test_intake_says_a_changed_plan_needs_approving_again(self):
+        self.assertIn("approve again", " ".join(self.read("intake.md").split()))
+
+
 class SkillDocTests(unittest.TestCase):
     def test_skill_frontmatter(self):
         meta = frontmatter(SKILL / "SKILL.md")

@@ -181,6 +181,9 @@ def validate_raw(doc, task_id=None):
             issues.append(issue("error", key, "must be a list"))
     if verdict == "exhausted" and doc.get("unknowns_remaining"):
         issues.append(issue("error", "verdict", "exhausted is not allowed while unknowns_remaining is non-empty"))
+    if verdict == "exhausted" and not findings and not doc.get("unknowns_resolved"):
+        issues.append(issue("error", "verdict", "exhausted means the unknown was resolved, but there are no findings "
+                            "and nothing under unknowns_resolved; if the sources could not answer, use irreducible"))
     if verdict == "irreducible" and not doc.get("sources_searched"):
         issues.append(issue("error", "verdict", "irreducible requires the list of sources_searched"))
     if verdict == "sufficient" and not _text(doc.get("verdict_reason")):

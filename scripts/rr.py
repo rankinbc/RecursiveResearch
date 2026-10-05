@@ -55,8 +55,17 @@ def run_validate(ws, args):
     return validate.validate_raw(store.read_json(session / "raw" / f"{args.id}.json"), args.id)
 
 
+class Parser(argparse.ArgumentParser):
+    """Report a mistyped command the way every other failure is reported: JSON, exit code 2."""
+
+    def error(self, message):
+        print(json.dumps({"error": f"{message}; run with --help to see the commands"}, ensure_ascii=False),
+              file=sys.stderr)
+        raise SystemExit(2)
+
+
 def build_parser():
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser = Parser(description=__doc__.splitlines()[0])
     parser.add_argument("--root", default="research", help="folder that holds research workspaces")
     sub = parser.add_subparsers(dest="command", required=True)
 

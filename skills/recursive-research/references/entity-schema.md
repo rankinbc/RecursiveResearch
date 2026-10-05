@@ -21,8 +21,14 @@ its properties. Say that stage 3 will run one researcher per type, with web
 search, at most the agent cap at a time.
 
 They may remove types, add types, or change properties. Edit
-`knowledge/entities.json` to match, then validate again. When they approve:
+`knowledge/entities.json` to match, then validate again. This is the one file
+under `knowledge/` you edit yourself, and only to record what the user
+decided at this gate: it is their list, not a research finding. When they
+approve:
 
     RR approve <slug> entity_types
+
+The approval covers the list as it was shown. If the file changes afterwards,
+stage 3 will not start until you show the user the list and approve again.
 
 Then start stage 3 with `references/entity-enumeration.md`.

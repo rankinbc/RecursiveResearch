@@ -102,6 +102,25 @@ class ApplyTests(WorkspaceCase):
     def apply(self):
         return scoring.apply_score(self.ws, scoring.score_session(self.ws))
 
+    def start_second_wave(self):
+        self.apply()
+        tasks.decide_proposals(self.ws, approve_all=True)
+        return tasks.add_session(self.ws, "deepening")["session"]
+
+    def test_the_gate_names_blocked_tasks_and_why_they_failed(self):
+        session = self.start_second_wave()
+        tasks.fail_task(self.ws, "l2", "search tool unavailable")
+        tasks.fail_task(self.ws, "l2", "search tool unavailable again")
+        gate = self.apply()
+        self.assertEqual(gate["session"], session)
+        self.assertEqual(gate["blocked"], ["wire/handshake"])
+        self.assertEqual(gate["blocked_tasks"], [{"id": "l2", "branch": "wire/handshake",
+                                                  "error": "search tool unavailable again"}])
+        self.assertEqual(self.apply()["blocked_tasks"], gate["blocked_tasks"])
+
+    def test_a_gate_with_nothing_blocked_says_so(self):
+        self.assertEqual(self.apply()["blocked_tasks"], [])
+
     def test_gate_summary_lists_closed_and_open_branches(self):
         gate = self.apply()
         self.assertEqual(gate["closed"], [{"branch": "wire/framing", "reason": "irreducible"}])

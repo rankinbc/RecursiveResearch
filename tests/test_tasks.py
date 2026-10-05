@@ -41,6 +41,55 @@ class ApprovalTests(WorkspaceCase):
             tasks.approve(self.ws, "plan")
         self.assertFalse(store.load_plan(self.ws)["approvals"]["plan"])
 
+    def test_changing_the_plan_after_approval_needs_a_new_approval(self):
+        self.fill_plan()
+        plan = store.load_plan(self.ws)
+        plan["goal"] = "Something the user never saw"
+        plan["survey_tasks"].append({"title": "Extra", "description": "Added quietly"})
+        store.save_plan(self.ws, plan)
+        with self.assertRaisesRegex(store.RRError, "changed since the user approved it: goal, survey_tasks"):
+            tasks.add_session(self.ws, "survey")
+        tasks.approve(self.ws, "plan")
+        self.assertEqual(tasks.add_session(self.ws, "survey")["task_count"], 5)
+
+    def test_a_changed_plan_stops_a_session_that_has_already_started(self):
+        self.fill_plan()
+        tasks.add_session(self.ws, "survey")
+        plan = store.load_plan(self.ws)
+        plan["precision_bar"] = "Anything goes"
+        store.save_plan(self.ws, plan)
+        with self.assertRaisesRegex(store.RRError, "changed since the user approved it: precision_bar"):
+            tasks.next_tasks(self.ws, mark=True)
+        self.assertEqual(len(tasks.next_tasks(self.ws)["tasks"]), 3, "only looking is still allowed")
+
+    def test_controls_and_bookkeeping_may_change_without_a_new_approval(self):
+        self.fill_plan()
+        plan = store.load_plan(self.ws)
+        plan["controls"]["depth_cap"] = 6
+        plan["branches"] = {"wire": {"status": "open", "level": 1}}
+        store.save_plan(self.ws, plan)
+        self.assertEqual(tasks.add_session(self.ws, "survey")["task_count"], 4)
+
+    def test_a_plan_approved_before_changes_were_tracked_still_runs(self):
+        self.fill_plan()
+        plan = store.load_plan(self.ws)
+        plan["approvals"] = {"plan": True, "entity_types": False}
+        plan["goal"] = "Edited in an older version"
+        store.save_plan(self.ws, plan)
+        self.assertEqual(tasks.add_session(self.ws, "survey")["task_count"], 4)
+
+    def test_changing_the_entity_types_after_approval_needs_a_new_approval(self):
+        self.fill_plan()
+        self.skip_to("entity_enumeration")
+        self.write("knowledge/entities.json", SCHEMA)
+        tasks.approve(self.ws, "entity_types")
+        changed = {"entity_types": SCHEMA["entity_types"] + [dict(SCHEMA["entity_types"][0], name="ErrorCode")]}
+        self.write("knowledge/entities.json", changed)
+        with self.assertRaisesRegex(store.RRError, "entities.json has changed since the user approved it"):
+            tasks.add_session(self.ws, "entity_enumeration")
+        tasks.approve(self.ws, "entity_types")
+        self.assertEqual(tasks.add_session(self.ws, "entity_enumeration")["task_count"], 2)
+
     def test_enumeration_waits_for_entity_type_approval(self):
         self.fill_plan()
         self.skip_to("entity_enumeration")

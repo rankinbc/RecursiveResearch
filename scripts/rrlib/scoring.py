@@ -113,7 +113,10 @@ def _gate_summary(ws, session, names, blocked, dropped, already_applied):
                     "unknown": p.get("unknown_being_resolved")}
                    for path in _proposal_files(ws, session)
                    for p in read_json(path).get("proposals", []) if p.get("status") == "dropped"]
+    blocked_tasks = [{"id": t["id"], "branch": t["branch"], "error": t["last_error"]}
+                     for t in load_tasks(ws, session)["tasks"] if not t["passes"]]
     return {"dropped": dropped_now, "session": session, "closed": closed, "open": still_open, "blocked": sorted(blocked),
+            "blocked_tasks": blocked_tasks,
             "proposals_dropped": dropped, "proposals_pending": len(pending), "proposals": pending,
             "agents_per_batch": plan["controls"]["max_agents_per_wave"],
             "already_applied": already_applied}

@@ -83,7 +83,7 @@ when there is nothing left to find.
 
 | Verdict | Use when | You must also give |
 |---|---|---|
-| `exhausted` | The unknown is resolved and nothing new is worth asking | `unknowns_remaining` empty |
+| `exhausted` | The unknown is resolved and nothing new is worth asking | `unknowns_remaining` empty, and at least one finding |
 | `irreducible` | Unknowns remain but the available sources do not hold the answer | `sources_searched`: everything you tried |
 | `sufficient` | Unknowns remain but they do not matter for the goal below | `verdict_reason`: which unknowns, and why |
 | `continue` | A specific further fact is findable and matters | at least one entry in `proposals` |

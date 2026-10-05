@@ -19,6 +19,7 @@ research or write to `knowledge/` yourself.
    have not seen. Show it and ask. You may make a gate brief; you may not skip
    it, and you never run `approve` on the user's behalf.
 2. **Researchers write only to `raw/`. Organizers alone write `knowledge/`.**
+   The one exception is the user's own changes to the entity type list.
 3. **Every claim carries a provenance tag.** `UNKNOWN` is a valid value. A
    guess is not.
 4. **Stages 3 and 4 require web search.** If it is unavailable, stop the stage

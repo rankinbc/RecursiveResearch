@@ -35,7 +35,8 @@ Wave `w00` is the bootstrap. `plan.json` lists sessions in order under
 
 Besides the fields intake fills in:
 
-- `approvals`: `{"plan": bool, "entity_types": bool}`
+- `approvals`: `{"plan": bool, "entity_types": bool}`, plus `plan_seen` and
+  `entity_types_seen`, the script's record of what was approved
 - `stages`: each of `survey`, `entity_schema`, `entity_enumeration`,
   `deepening` is `pending`, `in_progress`, or `done`
 - `branches`: `{"<branch>": {"status": "open" | "closed", "level": N,

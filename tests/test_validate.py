@@ -127,6 +127,12 @@ class RawTests(unittest.TestCase):
         for verdict in ("exhausted", "irreducible", "sufficient"):
             self.assertEqual(validate.validate_raw(raw_result("p1", verdict)), [], verdict)
 
+    def test_exhausted_must_have_found_something(self):
+        empty = raw_result("p1", "exhausted", tiers=(), unknowns_resolved=[])
+        self.assertIn("exhausted means the unknown was resolved", errors(validate.validate_raw(empty))[0])
+        self.assertEqual(validate.validate_raw(raw_result("p1", "exhausted", tiers=())), [])
+        self.assertEqual(validate.validate_raw(raw_result("p1", "exhausted", unknowns_resolved=[])), [])
+
     def test_findings_need_a_claim_a_real_tier_and_a_source(self):
         doc = raw_result("p1")
         doc["findings"] = [{"claim": "", "tier": "PRIMARY", "source": "x"},

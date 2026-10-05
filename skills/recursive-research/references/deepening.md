@@ -25,7 +25,7 @@ Show the user:
 
 - **Closed this wave:** each branch and its reason, from `closed`.
 - **Still open:** from `open`.
-- **Blocked:** from `blocked`, with the task errors from `RR status <slug>`.
+- **Blocked:** from `blocked`, with each task's error from `blocked_tasks`.
 - **Dropped:** proposals in `dropped`, each on a branch that closed. Say that
   reopening the branch brings them back.
 - **Quotes:** how many `PRIMARY` findings the script downgraded this wave,
