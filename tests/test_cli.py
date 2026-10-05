@@ -78,6 +78,32 @@ class CliTests(unittest.TestCase):
         code, out = self.rr("status", "touhou")
         self.assertEqual(out["subject"], "東方 Project")
 
+    def test_a_wrongly_typed_plan_value_exits_2_with_json_not_a_traceback(self):
+        self.rr("scaffold", "Wire Protocol")
+        plan_path = self.root / "wire-protocol" / "plan.json"
+        plan = json.loads(plan_path.read_text(encoding="utf-8"))
+        plan.update(PLAN_FIELDS)
+        plan_path.write_text(json.dumps(plan), encoding="utf-8")
+        self.rr("approve", "wire-protocol", "plan")
+        self.rr("add-session", "wire-protocol", "survey")
+        plan = json.loads(plan_path.read_text(encoding="utf-8"))
+        plan["controls"]["max_agents_per_wave"] = None
+        plan_path.write_text(json.dumps(plan), encoding="utf-8")
+        code, out = self.rr("next-task", "wire-protocol")
+        self.assertEqual(code, 2)
+        self.assertIn("internal error", out["error"])
+
+    def test_retry_task_is_a_command(self):
+        self.rr("scaffold", "Wire Protocol")
+        plan_path = self.root / "wire-protocol" / "plan.json"
+        plan = json.loads(plan_path.read_text(encoding="utf-8"))
+        plan.update(PLAN_FIELDS)
+        plan_path.write_text(json.dumps(plan), encoding="utf-8")
+        self.rr("approve", "wire-protocol", "plan")
+        self.rr("add-session", "wire-protocol", "survey")
+        self.rr("fail-task", "wire-protocol", "s01", "boom")
+        self.assertEqual(self.rr("retry-task", "wire-protocol", "s01"), (0, {"retry": "s01", "attempts": 0}))
+
     def test_validate_raw_needs_an_id(self):
         self.rr("scaffold", "Wire Protocol")
         plan_path = self.root / "wire-protocol" / "plan.json"

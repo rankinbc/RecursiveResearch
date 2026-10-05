@@ -43,6 +43,12 @@ class ScaffoldTests(WorkspaceCase):
         with self.assertRaises(store.RRError):
             store.scaffold(self.root, "Test Subject")
 
+    def test_scaffold_finishes_a_workspace_left_without_a_plan(self):
+        (self.root / "half-made" / "knowledge").mkdir(parents=True)
+        result = store.scaffold(self.root, "Half Made")
+        self.assertEqual(result["slug"], "half-made")
+        self.assertEqual(store.load_plan(self.root / "half-made")["subject"], "Half Made")
+
     def test_scaffold_accepts_an_explicit_slug_for_non_latin_subjects(self):
         result = store.scaffold(self.root, "東方", slug="touhou")
         self.assertEqual(result["slug"], "touhou")

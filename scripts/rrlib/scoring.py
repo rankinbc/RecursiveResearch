@@ -6,6 +6,7 @@ from .store import RRError, is_under, load_plan, read_json, save_plan, write_jso
 from .tasks import MAX_ATTEMPTS, current_session, load_tasks, session_dir
 
 DISPOSITIONS = ("new", "duplicate", "conflict")
+GATE = "gate.json"  # written when a session has been scored and its gate can be presented
 # When no researcher on a branch said "continue", report the most informative reason
 VERDICT_PRIORITY = ("irreducible", "sufficient", "exhausted")
 
@@ -15,8 +16,9 @@ def _recommend(b, thresholds, depth_cap):
         return "blocked", "no task on this branch completed"
     if "continue" not in b["verdicts"]:
         return "close", next(v for v in VERDICT_PRIORITY if v in b["verdicts"])
-    if b["new"] < thresholds["min_new_facts"]:
-        return "close", f"diminishing returns: only {b['new']} new facts"
+    # A task is asked to resolve one unknown, so a small count alone is not a dry branch.
+    if b["new"] < thresholds["min_new_facts"] and b["unknowns_resolved"] == 0:
+        return "close", f"diminishing returns: only {b['new']} new facts and no unknowns resolved"
     if b["findings"] and b["duplicate"] / b["findings"] > thresholds["max_duplicate_share"]:
         return "close", f"diminishing returns: {b['duplicate']} of {b['findings']} findings were duplicates"
     if b["findings"] and b["unknowns_resolved"] == 0 and b["weak"] / b["findings"] > thresholds["max_weak_share"]:
@@ -85,55 +87,84 @@ def _proposal_files(ws, session):
     return sorted((session_dir(ws, session) / "proposals").glob("*.json"))
 
 
-def apply_score(ws, result):
-    """Close the branches recommended for closing and build the gate summary."""
+def _pending(ws, session):
+    return sum(1 for path in _proposal_files(ws, session)
+               for p in read_json(path).get("proposals", []) if p.get("status") in ("proposed", "approved"))
+
+
+def _gate_summary(ws, session, names, blocked, dropped, already_applied):
+    """Describe the gate from what is on disk now, so reopened branches show as open."""
     plan = load_plan(ws)
+    closed, still_open = [], []
+    for name in sorted(names):
+        record = plan["branches"].get(name, {})
+        if record.get("status") == "closed":
+            closed.append({"branch": name, "reason": record.get("reason", "")})
+        elif name not in blocked:
+            still_open.append(name)
+    return {"session": session, "closed": closed, "open": still_open, "blocked": sorted(blocked),
+            "proposals_dropped": dropped, "proposals_pending": _pending(ws, session),
+            "agents_per_batch": plan["controls"]["max_agents_per_wave"],
+            "already_applied": already_applied}
+
+
+def apply_score(ws, result):
+    """Close the branches recommended for closing and build the gate summary.
+
+    Runs once per session. Every step can be repeated after an interruption, and
+    gate.json, written last, marks the session as scored: after that, running
+    this again only reports, so it cannot undo a reopen.
+    """
     session = result["session"]
-    closed, still_open, blocked, newly_closed = [], [], [], []
-    for name, b in sorted(result["branches"].items()):
-        previous = plan["branches"].get(name, {})
-        if b["recommendation"] == "close":
-            if previous.get("status") != "closed":
-                newly_closed.append(name)
+    gate_path = session_dir(ws, session) / GATE
+    if gate_path.is_file():
+        gate = read_json(gate_path)
+        return _gate_summary(ws, session, gate["branches"], gate["blocked"], gate["proposals_dropped"], True)
+
+    to_close = sorted(n for n, b in result["branches"].items() if b["recommendation"] == "close")
+    blocked = sorted(n for n, b in result["branches"].items() if b["recommendation"] == "blocked")
+
+    path = Path(ws) / "knowledge" / "remaining_unknowns.md"
+    existing = path.read_text(encoding="utf-8") if path.is_file() else ""
+    text = "" if existing else "# Remaining unknowns\n"
+    for name in to_close:
+        b = result["branches"][name]
+        heading = f"\n## {name}\n\nClosed in {session}: "
+        if heading in existing:
+            continue
+        text += f"{heading}{b['reason']}\n\n"
+        text += "".join(f"- {u}\n" for u in b["remaining"]) or "- none recorded\n"
+    if text and (to_close or existing):
+        with open(path, "a", encoding="utf-8", newline="\n") as f:
+            f.write(text)
+
+    plan = load_plan(ws)
+    for name, b in result["branches"].items():
+        if name in to_close:
             plan["branches"][name] = {"status": "closed", "reason": b["reason"],
                                       "session": session, "level": b["level"]}
-            closed.append({"branch": name, "reason": b["reason"]})
         else:
             plan["branches"][name] = {"status": "open", "level": b["level"]}
-            (blocked if b["recommendation"] == "blocked" else still_open).append(name)
     save_plan(ws, plan)
 
     all_closed = [name for name, b in plan["branches"].items() if b["status"] == "closed"]
-    dropped = pending = 0
-    for path in _proposal_files(ws, session):
-        doc = read_json(path)
+    dropped = 0
+    for proposals in _proposal_files(ws, session):
+        doc = read_json(proposals)
         changed = False
         for p in doc.get("proposals", []):
-            if p.get("status") not in ("proposed", "approved"):
-                continue
-            if any(is_under(p.get("branch", ""), c) for c in all_closed):
+            if p.get("status") in ("proposed", "approved") and any(
+                    is_under(p.get("branch", ""), c) for c in all_closed):
                 p["status"] = "dropped"
                 p["dropped_reason"] = "branch closed"
                 dropped += 1
                 changed = True
-            else:
-                pending += 1
         if changed:
-            write_json(path, doc)
+            write_json(proposals, doc)
 
-    if newly_closed:
-        path = Path(ws) / "knowledge" / "remaining_unknowns.md"
-        text = "" if path.is_file() else "# Remaining unknowns\n"
-        for name in newly_closed:
-            b = result["branches"][name]
-            text += f"\n## {name}\n\nClosed in {session}: {b['reason']}\n\n"
-            text += "".join(f"- {u}\n" for u in b["remaining"]) or "- none recorded\n"
-        with open(path, "a", encoding="utf-8", newline="\n") as f:
-            f.write(text)
-
-    return {"session": session, "closed": closed, "open": still_open, "blocked": blocked,
-            "proposals_dropped": dropped, "proposals_pending": pending,
-            "agents_per_batch": plan["controls"]["max_agents_per_wave"]}
+    write_json(gate_path, {"branches": sorted(result["branches"]), "blocked": blocked,
+                           "proposals_dropped": dropped})
+    return _gate_summary(ws, session, result["branches"], blocked, dropped, False)
 
 
 def reopen_branch(ws, branch):

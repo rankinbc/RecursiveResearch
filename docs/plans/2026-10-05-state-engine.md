@@ -1,5 +1,7 @@
 # RecursiveResearch State Engine Implementation Plan
 
+> **Note (2026-10-05):** the code blocks below are as first implemented. A review fix pass changed several files afterwards (commit "Fix review findings"); the repository is the source of truth.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build the bookkeeping script that holds all state for a recursive-research project: workspaces, task lists, approvals, validation, branch scoring, and the knowledge guard.

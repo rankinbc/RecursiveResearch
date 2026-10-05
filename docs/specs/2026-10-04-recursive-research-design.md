@@ -243,7 +243,7 @@ for each branch in the wave:
 A branch is recommended for closing, even if its researcher said `continue`,
 when any of these holds for the wave:
 
-- it added fewer than 3 new tagged facts
+- it added fewer than 3 new tagged facts and resolved no unknowns
 - more than 60% of its findings duplicated the tree
 - it resolved no unknowns and more than 80% of its findings were `INFERRED`
   or `OBSERVED`

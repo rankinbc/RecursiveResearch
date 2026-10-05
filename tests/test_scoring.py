@@ -24,9 +24,13 @@ class ScoreTests(WorkspaceCase):
                 self.assertEqual((b["recommendation"], b["reason"]), ("close", verdict))
 
     def test_few_new_facts_close_the_branch_even_if_the_researcher_said_continue(self):
-        b = self.one_task(dispositions=["new", "new", "duplicate"])
+        b = self.one_task(dispositions=["new", "new", "duplicate"], raw_kwargs={"unknowns_resolved": []})
         self.assertEqual(b["recommendation"], "close")
-        self.assertEqual(b["reason"], "diminishing returns: only 2 new facts")
+        self.assertEqual(b["reason"], "diminishing returns: only 2 new facts and no unknowns resolved")
+
+    def test_one_new_fact_that_resolved_its_unknown_keeps_the_branch_open(self):
+        b = self.one_task(tiers=("PRIMARY",))
+        self.assertEqual((b["new"], b["unknowns_resolved"], b["recommendation"]), (1, 1, "open"))
 
     def test_mostly_duplicates_close_the_branch(self):
         tiers = ("PRIMARY",) * 10
@@ -47,8 +51,8 @@ class ScoreTests(WorkspaceCase):
         self.assertEqual((b["recommendation"], b["reason"]), ("close", "depth cap of 4 reached"))
 
     def test_a_result_with_no_findings_does_not_crash(self):
-        b = self.one_task(tiers=())
-        self.assertEqual(b["reason"], "diminishing returns: only 0 new facts")
+        b = self.one_task(tiers=(), raw_kwargs={"unknowns_resolved": []})
+        self.assertEqual(b["reason"], "diminishing returns: only 0 new facts and no unknowns resolved")
 
     def test_a_branch_whose_only_task_is_blocked_is_reported_not_closed(self):
         self.start_wave([proposal("p1")])
@@ -131,12 +135,52 @@ class ApplyTests(WorkspaceCase):
         with self.assertRaisesRegex(store.RRError, "is not closed"):
             scoring.reopen_branch(self.ws, "wire/framing")
 
-    def test_status_reports_branches_and_the_next_step(self):
+    def test_applying_again_after_a_reopen_keeps_the_branch_open(self):
+        self.apply()
+        scoring.reopen_branch(self.ws, "wire/framing")
+        gate = self.apply()
+        self.assertTrue(gate["already_applied"])
+        self.assertEqual(gate["closed"], [])
+        self.assertEqual(gate["open"], ["wire/framing", "wire/handshake"])
+        self.assertEqual(gate["proposals_pending"], 2)
+        self.assertEqual(store.load_plan(self.ws)["branches"]["wire/framing"]["status"], "open")
+        text = (self.ws / "knowledge" / "remaining_unknowns.md").read_text(encoding="utf-8")
+        self.assertEqual(text.count("## wire/framing"), 1)
+
+    def test_an_apply_interrupted_midway_completes_correctly_when_run_again(self):
+        real_write, calls = scoring.write_json, []
+
+        def interrupt_once(path, data):
+            if not calls:
+                calls.append(path)
+                raise KeyboardInterrupt
+            real_write(path, data)
+
+        scoring.write_json = interrupt_once
+        self.addCleanup(setattr, scoring, "write_json", real_write)
+        with self.assertRaises(KeyboardInterrupt):
+            self.apply()
+        gate = self.apply()
+        self.assertEqual(gate["closed"], [{"branch": "wire/framing", "reason": "irreducible"}])
+        text = (self.ws / "knowledge" / "remaining_unknowns.md").read_text(encoding="utf-8")
+        self.assertEqual(text.count("## wire/framing"), 1)
+        self.assertIn("- the retry timeout", text)
+        doc = store.read_json(self.ws / "sessions" / self.session / "proposals" / "level_2.json")
+        self.assertEqual([p["status"] for p in doc["proposals"]], ["dropped", "proposed"])
+
+    def test_status_tells_organizer_pending_from_scoring_pending_from_the_gate(self):
+        self.assertIn("then score --apply", report.status(self.ws)["next_step"])
+        self.assertIn("Validate the tree and proposals", report.status(self.ws)["next_step"])
+        (self.ws / "sessions" / self.session / "ledger.json").unlink()
+        self.assertIn("Run the organizer", report.status(self.ws)["next_step"])
+
+    def test_status_reports_branches_and_the_gate(self):
         self.apply()
         status = report.status(self.ws)
         self.assertEqual(status["branches"]["open"], ["wire/handshake"])
         self.assertEqual(status["branches"]["closed"], [{"branch": "wire/framing", "reason": "irreducible"}])
-        self.assertIn("Run the organizer", status["next_step"])
+        self.assertIn("At the gate", status["next_step"])
+        self.assertNotIn("Run the organizer", status["next_step"])
 
 
 class StatusTests(WorkspaceCase):

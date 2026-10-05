@@ -69,6 +69,10 @@ def build_parser():
     p.add_argument("task_id")
     p.add_argument("reason")
 
+    p = sub.add_parser("retry-task", help="give a blocked task a fresh set of attempts")
+    p.add_argument("slug")
+    p.add_argument("task_id")
+
     p = sub.add_parser("set-stage", help="set a stage's status")
     p.add_argument("slug")
     p.add_argument("stage", choices=store.STAGES)
@@ -123,6 +127,8 @@ def dispatch(args):
         return tasks.complete_task(ws, args.task_id, args.summary), 0
     if args.command == "fail-task":
         return tasks.fail_task(ws, args.task_id, args.reason), 0
+    if args.command == "retry-task":
+        return tasks.retry_task(ws, args.task_id), 0
     if args.command == "set-stage":
         return store.set_stage(ws, args.stage, args.status), 0
     if args.command == "validate":
@@ -153,6 +159,10 @@ def main(argv=None):
         result, code = dispatch(args)
     except store.RRError as e:
         print(json.dumps({"error": str(e)}, ensure_ascii=False), file=sys.stderr)
+        return 2
+    except Exception as e:  # a crash must never look like a validation result (exit 1)
+        message = f"internal error ({type(e).__name__}: {e}); check plan.json and the session files for wrong types"
+        print(json.dumps({"error": message}, ensure_ascii=False), file=sys.stderr)
         return 2
     print(json.dumps(result, indent=2, ensure_ascii=False))
     return code

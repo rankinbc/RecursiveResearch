@@ -4,7 +4,7 @@ from pathlib import Path
 
 from .store import RRError, STAGES, load_plan, read_json, save_plan, today, type_id, write_json
 from .validate import (ID_RE, find_type, has_errors, validate_entity_file, validate_entity_schema,
-                       validate_plan, validate_proposals, validate_raw)
+                       validate_plan, validate_proposals, validate_raw, validate_tree)
 
 MAX_ATTEMPTS = 2  # one try plus one retry; after that the task is reported as blocked
 
@@ -127,8 +127,11 @@ def add_session(ws, stage, tasks=None):
     else:
         name = f"{today()}_{stage}"
     sdir = session_dir(ws, name)
-    if sdir.exists():
+    if name in plan["sessions"]:
         raise RRError(f"session {name} already exists")
+    if sdir.exists():
+        # Not listed in the plan, so an earlier add-session was interrupted before it finished.
+        shutil.rmtree(sdir)
 
     filled, seen = [], set()
     for t in tasks:
@@ -225,12 +228,25 @@ def complete_task(ws, task_id, summary, session=None):
     output = Path(ws) / task["output"]
     if not output.is_file() or output.stat().st_size == 0:
         raise RRError(f"task {task_id} produced nothing at {task['output']}; use fail-task to record why")
-    if doc["stage"] == "deepening" and "/raw/" in task["output"]:
+    stage = doc["stage"]
+    if stage == "entity_schema":
+        issues = validate_entity_schema(read_json(output))
+        if has_errors(issues):
+            raise RRError(f"{task['output']} is not a valid entity schema: {_errors(issues)}")
+    elif stage == "entity_enumeration":
+        if not (Path(ws) / "knowledge" / "entities" / f"{task_id}.json").is_file():
+            raise RRError(f"the roster for {task_id} is not in knowledge/entities/; "
+                          "run promote-entity and fix what it reports first")
+    elif stage == "deepening" and "/raw/" in task["output"]:
         raw = read_json(output)
         issues = validate_raw(raw, task_id)
         if has_errors(issues):
             raise RRError(f"{task['output']} is not a valid result: {_errors(issues)}")
         task["verdict"] = raw["verdict"]
+    elif stage == "deepening":
+        issues = validate_tree(Path(ws) / "knowledge" / "tree")
+        if has_errors(issues):
+            raise RRError(f"the knowledge tree is not valid: {_errors(issues)}")
     task["passes"] = True
     task["last_error"] = None
     write_json(session_dir(ws, session) / "tasks.json", doc)
@@ -250,6 +266,19 @@ def fail_task(ws, task_id, reason, session=None):
     write_json(session_dir(ws, session) / "tasks.json", doc)
     _log(ws, session, f"{task_id}: FAILED (attempt {task['attempts']}): {reason}")
     return {"failed": task_id, "attempts": task["attempts"], "blocked": _blocked(task)}
+
+
+def retry_task(ws, task_id, session=None):
+    """Give a failed or blocked task a fresh set of attempts, when the user asks for it."""
+    session = session or current_session(ws)
+    doc = load_tasks(ws, session)
+    task = _find(doc, task_id)
+    if task["passes"]:
+        raise RRError(f"task {task_id} is already complete")
+    task["attempts"] = 0
+    write_json(session_dir(ws, session) / "tasks.json", doc)
+    _log(ws, session, f"{task_id}: attempts reset for a retry")
+    return {"retry": task_id, "attempts": 0}
 
 
 def promote_entity(ws, tid, session=None):

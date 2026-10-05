@@ -12,14 +12,17 @@ the next ones. Branches close on their own when they run dry.
 2. Dispatch one `recursive-research:organizer` agent with
    `templates/organize-bootstrap.md`.
 3. `RR validate <slug> tree` and `RR validate <slug> proposals`. Send errors
-   back to the same agent to fix, once.
+   back to the same agent to fix, once. If errors remain,
+   `RR fail-task <slug> bootstrap "<the errors>"` and tell the user.
 4. `RR complete-task <slug> bootstrap "<summary>"`.
 5. Go to the gate.
 
 ## The gate
 
 Run `RR score <slug> --apply` (after bootstrap it closes nothing and only
-counts proposals). Then show the user:
+counts proposals). It scores a session once; running it again only repeats
+the summary, so it is safe after an interruption or a reopen. Then show the
+user:
 
 - **Closed this wave:** each branch and its reason, from `closed`.
 - **Still open:** from `open`.
@@ -61,7 +64,7 @@ closed branch, or stop here.
 | Condition | Reason recorded |
 |---|---|
 | No researcher on the branch said `continue` | `irreducible`, `sufficient`, or `exhausted` |
-| Fewer new facts than `min_new_facts` | diminishing returns |
+| Fewer new facts than `min_new_facts` and no unknowns resolved | diminishing returns |
 | Duplicate share above `max_duplicate_share` | diminishing returns |
 | No unknowns resolved and weak-tier share above `max_weak_share` | diminishing returns |
 | The branch reached `depth_cap` | depth cap reached |

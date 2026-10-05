@@ -83,7 +83,8 @@ Stages 1, 3 and 4 dispatch researchers the same way:
 6. Repeat from step 1 until the batch is empty or only a solo task remains.
 
 A failed task is offered once more by `next-task`. After a second failure it
-appears under `blocked`; report blocked tasks to the user at the next gate.
+appears under `blocked`; report blocked tasks to the user. If they want one
+tried again, `RR retry-task <slug> <id>` makes it runnable.
 
 ## Gates
 

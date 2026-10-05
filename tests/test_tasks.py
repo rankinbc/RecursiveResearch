@@ -17,6 +17,25 @@ class ApprovalTests(WorkspaceCase):
         with self.assertRaisesRegex(store.RRError, "survey stage is not done yet"):
             tasks.add_session(self.ws, "deepening")
 
+    def test_a_session_folder_left_by_an_interrupted_run_is_replaced(self):
+        self.fill_plan()
+        leftover = self.ws / "sessions" / "2026-10-04_survey"
+        leftover.mkdir()
+        (leftover / "tasks.json").write_text("{half written", encoding="utf-8")
+        result = tasks.add_session(self.ws, "survey")
+        self.assertEqual(result["task_count"], 4)
+        self.assertEqual(tasks.next_tasks(self.ws, limit=1)["tasks"][0]["id"], "s01")
+
+    def test_an_invalid_entity_schema_cannot_be_completed(self):
+        self.fill_plan()
+        self.skip_to("entity_schema")
+        tasks.add_session(self.ws, "entity_schema")
+        self.write("knowledge/entities.json", {"entity_types": []})
+        with self.assertRaisesRegex(store.RRError, "not a valid entity schema"):
+            tasks.complete_task(self.ws, "schema", "0 types")
+        self.write("knowledge/entities.json", SCHEMA)
+        self.assertEqual(tasks.complete_task(self.ws, "schema", "1 type")["remaining"], 0)
+
     def test_an_incomplete_plan_cannot_be_approved(self):
         with self.assertRaisesRegex(store.RRError, "cannot approve plan"):
             tasks.approve(self.ws, "plan")
@@ -52,6 +71,15 @@ class SurveyTests(WorkspaceCase):
         self.assertEqual(plan["sessions"], [self.session])
         self.assertEqual(plan["stages"]["survey"], "in_progress")
         self.assertTrue((self.ws / "sessions" / self.session / "raw").is_dir())
+
+    def test_a_blocked_task_can_be_given_another_try(self):
+        tasks.fail_task(self.ws, "s01", "boom")
+        tasks.fail_task(self.ws, "s01", "boom")
+        self.assertEqual([t["id"] for t in tasks.next_tasks(self.ws, limit=1)["tasks"]], ["s02"])
+        self.assertEqual(tasks.retry_task(self.ws, "s01"), {"retry": "s01", "attempts": 0})
+        batch = tasks.next_tasks(self.ws, limit=1)
+        self.assertEqual([t["id"] for t in batch["tasks"]], ["s01"])
+        self.assertEqual(batch["blocked"], [])
 
     def test_the_same_session_cannot_be_created_twice(self):
         with self.assertRaisesRegex(store.RRError, "already exists"):
@@ -111,6 +139,14 @@ class DeepeningTests(WorkspaceCase):
         self.assertEqual(result["session"], "2026-10-04_deepening_w00")
         self.assertEqual(tasks.next_tasks(self.ws)["tasks"][0]["id"], "bootstrap")
 
+    def test_the_bootstrap_cannot_be_completed_with_a_malformed_tree(self):
+        self.fill_plan()
+        self.skip_to("deepening")
+        tasks.add_session(self.ws, "deepening")
+        self.write("knowledge/tree/README.md", "# Tree with no unknowns section\n")
+        with self.assertRaisesRegex(store.RRError, "Known Unknowns"):
+            tasks.complete_task(self.ws, "bootstrap", "built")
+
     def test_a_wave_is_built_from_approved_proposals_only(self):
         session = self.start_wave([proposal("p1"), proposal("p2", status="proposed"),
                                    proposal("p3", status="skipped")])
@@ -160,6 +196,15 @@ class PromoteTests(WorkspaceCase):
         result = tasks.promote_entity(self.ws, "message_type")
         self.assertTrue(result["promoted"])
         self.assertTrue((self.ws / "knowledge/entities/message_type.json").is_file())
+
+    def test_a_roster_that_was_not_promoted_cannot_be_completed(self):
+        self.write(f"sessions/{self.session}/raw/message_type.json", self.roster(None))
+        self.assertFalse(tasks.promote_entity(self.ws, "message_type")["promoted"])
+        with self.assertRaisesRegex(store.RRError, "promote-entity"):
+            tasks.complete_task(self.ws, "message_type", "1 instance")
+        self.write(f"sessions/{self.session}/raw/message_type.json", self.roster("PRIMARY"))
+        tasks.promote_entity(self.ws, "message_type")
+        self.assertEqual(tasks.complete_task(self.ws, "message_type", "1 instance")["remaining"], 0)
 
     def test_an_untagged_roster_is_not_copied(self):
         self.write(f"sessions/{self.session}/raw/message_type.json", self.roster(None))

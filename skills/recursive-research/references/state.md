@@ -19,6 +19,8 @@ when you need to explain a file to the user.
         raw/
         proposals/level_<N>.json
         ledger.json              # deepening waves only
+        coordination_brief.md    # deepening only; who owns what in the next wave
+        gate.json                # deepening only; present once the session is scored
         knowledge_snapshot.json
 
 Session names are `<date>_<stage>`, or `<date>_deepening_w<NN>` for deepening.

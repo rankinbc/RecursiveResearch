@@ -9,9 +9,12 @@ VERDICTS = ("exhausted", "irreducible", "sufficient", "continue")
 PROPOSAL_STATUSES = ("proposed", "approved", "skipped", "dropped")
 GENERIC_NAMES = ("data.json", "notes.md")
 ID_RE = re.compile(r"[A-Za-z0-9_-]+")
-# Wording that asks for "more" without naming what is missing
+# Wording that asks for "more" without naming what is missing. "further" and
+# "deeper" only count after a research verb, so "whether further retries occur" passes.
 VAGUE_RE = re.compile(
-    r"\b(further|deeper|more (detail|details|information|research|about)|in (more|greater) (detail|depth))\b",
+    r"^\W*(research|investigate|explore|look into|learn|study|find out)\b.*\b(further|deeper|more)\b"
+    r"|\bmore (detail|details|information|research|about)\b"
+    r"|\bin (more|greater) (detail|depth)\b",
     re.IGNORECASE,
 )
 

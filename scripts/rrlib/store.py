@@ -100,10 +100,11 @@ def scaffold(root, subject, slug=None):
         raise RRError("subject is empty")
     slug = slugify(slug or subject)
     ws = Path(root) / slug
-    if ws.exists():
+    if (ws / "plan.json").exists():
         raise RRError(f"{ws.as_posix()} already exists; resume it or pass a different --slug")
+    # A folder without plan.json is left over from an interrupted scaffold; finish it.
     for sub in ("knowledge/entities", "knowledge/tree", "sessions"):
-        (ws / sub).mkdir(parents=True)
+        (ws / sub).mkdir(parents=True, exist_ok=True)
     write_json(ws / "plan.json", default_plan(subject.strip(), slug))
     return {"workspace": ws.as_posix(), "slug": slug, "plan": (ws / "plan.json").as_posix()}
 

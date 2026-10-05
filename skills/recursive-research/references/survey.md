@@ -9,11 +9,13 @@ Produces `knowledge/spec.md`: a broad prose overview, one section per task.
 2. Run the research loop from `SKILL.md` with `templates/research-survey.md`.
    Researchers may use what they know as well as search in this stage, but
    every claim is still tagged.
-3. When `next-task` returns only the `assemble` task, dispatch one
-   `recursive-research:organizer` agent with `templates/organize-survey.md`.
-4. `RR complete-task <slug> assemble "<summary>"`.
-5. If any survey task is blocked, tell the user which sections are missing
-   and ask whether to retry them or continue without them.
+3. When `next-task` returns only the `assemble` task, check its `blocked`
+   list. If any survey task is blocked, tell the user which sections are
+   missing and why, and ask whether to retry them or continue without them.
+   To retry, `RR retry-task <slug> <id>` for each and return to step 2.
+4. Dispatch one `recursive-research:organizer` agent with
+   `templates/organize-survey.md`.
+5. `RR complete-task <slug> assemble "<summary>"`.
 6. `RR set-stage <slug> survey done`.
 
 Tell the user the survey is written and where it is, in two or three

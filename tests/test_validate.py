@@ -151,6 +151,11 @@ class ProposalTests(WorkspaceCase):
         for text in ("Research this topic further", "More detail about framing", "tbd"):
             self.assertTrue(self.check(proposal("p1", unknown_being_resolved=text)), text)
 
+    def test_concrete_unknowns_that_happen_to_say_further_or_deeper_are_accepted(self):
+        for text in ("Whether further retries occur after a timeout",
+                     "How much deeper the nesting limit is in version 2"):
+            self.assertEqual(self.check(proposal("p1", unknown_being_resolved=text)), [], text)
+
     def test_proposal_needs_sources_and_a_target_inside_its_branch(self):
         self.assertTrue(self.check(proposal("p1", expected_sources=[])))
         self.assertTrue(self.check(proposal("p1", target_file="knowledge/tree/other/p1.md")))

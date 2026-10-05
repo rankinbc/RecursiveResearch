@@ -20,6 +20,10 @@ For each finding in each raw file, decide one disposition:
   If the new finding is stronger, replace the old value. At the same tier,
   keep both with their sources and mark the line `CONFLICT`.
 
+If `ledger.json` does not exist yet but the tree already holds findings from
+this session's raw files, an earlier run of this job was interrupted. Count
+those findings as **new**, not duplicate.
+
 Follow the tree conventions: a `README.md` in every folder ending with
 `## Known Unknowns`; JSON leaves with `_meta.provenance` and `_meta.source`;
 Markdown leaves with tagged claims; file names that say what the file holds.

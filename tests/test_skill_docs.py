@@ -31,6 +31,15 @@ class SkillDocTests(unittest.TestCase):
         self.assertEqual(mentioned - existing, set(), "mentioned but missing")
         self.assertEqual(existing - mentioned, set(), "present but never mentioned")
 
+    def test_stage_3_checks_the_snapshot_before_promoting_rosters(self):
+        text = (SKILL / "references" / "entity-enumeration.md").read_text(encoding="utf-8")
+        self.assertLess(text.index("RR check-snapshot"), text.index("RR promote-entity"),
+                        "promotion writes to knowledge/, so the check must come first")
+
+    def test_the_survey_asks_about_blocked_sections_before_assembling(self):
+        text = (SKILL / "references" / "survey.md").read_text(encoding="utf-8")
+        self.assertLess(text.index("RR retry-task"), text.index("complete-task <slug> assemble"))
+
     def test_every_script_command_in_the_docs_is_real(self):
         for doc in DOCS:
             for command in re.findall(r"\bRR ([a-z][a-z-]*)", doc.read_text(encoding="utf-8")):
