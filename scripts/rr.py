@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
-"""Bookkeeping for recursive-research. Every command prints one JSON object.
+"""Bookkeeping for recursive-research. Every command prints one JSON object,
+except `progress`, which prints a readable summary for a person.
 
 Exit codes: 0 = ok, 1 = validation found errors, 2 = the command could not run.
 """
 import argparse
 import json
+import os
 import sys
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from rrlib import guard, report, scoring, store, tasks, validate  # noqa: E402
+from rrlib import guard, progress, report, scoring, store, tasks, validate  # noqa: E402
 
 VALIDATE_TARGETS = ("plan", "entity_schema", "entity", "proposals", "raw", "tree")
 
@@ -103,7 +106,32 @@ def build_parser():
 
     p = sub.add_parser("status", help="status of one subject, or of all of them")
     p.add_argument("slug", nargs="?")
+
+    p = sub.add_parser("progress", help="readable progress summary, for watching a run")
+    p.add_argument("slug")
+    p.add_argument("--json", action="store_true", help="print the underlying data as JSON")
+    p.add_argument("--watch", nargs="?", const=5.0, type=float, metavar="SECONDS",
+                   help="refresh until Ctrl+C (default every 5 seconds)")
     return parser
+
+
+def run_progress(args):
+    ws = store.workspace(args.root, args.slug)
+    if args.json:
+        print(json.dumps(progress.progress(ws), indent=2, ensure_ascii=False))
+        return 0
+    if args.watch is None:
+        print(progress.render(progress.progress(ws)))
+        return 0
+    interval = max(args.watch, 1.0)
+    try:
+        while True:
+            text = progress.render(progress.progress(ws))
+            os.system("cls" if os.name == "nt" else "clear")
+            print(f"{text}\n\nRefreshing every {interval:g}s. Ctrl+C to stop.", flush=True)
+            time.sleep(interval)
+    except KeyboardInterrupt:
+        return 0
 
 
 def dispatch(args):
@@ -122,7 +150,7 @@ def dispatch(args):
     if args.command == "add-session":
         return tasks.add_session(ws, args.stage), 0
     if args.command == "next-task":
-        return tasks.next_tasks(ws, args.limit), 0
+        return tasks.next_tasks(ws, args.limit, mark=True), 0
     if args.command == "complete-task":
         return tasks.complete_task(ws, args.task_id, args.summary), 0
     if args.command == "fail-task":
@@ -156,6 +184,8 @@ def main(argv=None):
         stream.reconfigure(encoding="utf-8")
     args = build_parser().parse_args(argv)
     try:
+        if args.command == "progress":
+            return run_progress(args)
         result, code = dispatch(args)
     except store.RRError as e:
         print(json.dumps({"error": str(e)}, ensure_ascii=False), file=sys.stderr)

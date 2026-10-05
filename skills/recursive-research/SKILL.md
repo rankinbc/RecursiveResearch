@@ -86,6 +86,17 @@ A failed task is offered once more by `next-task`. After a second failure it
 appears under `blocked`; report blocked tasks to the user. If they want one
 tried again, `RR retry-task <slug> <id>` makes it runnable.
 
+## Letting the user watch
+
+When the first research batch of a run starts, tell the user once that they
+can watch from a second terminal in the same folder, and give them the full
+command with the real script path:
+
+    RR progress <slug> --watch
+
+It shows each stage's task counts, which tasks are running, done or blocked,
+per-wave findings, and which branches are open or closed.
+
 ## Gates
 
 At a gate, show the user what they are approving, say what happens next and

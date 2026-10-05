@@ -42,8 +42,9 @@ Besides the fields intake fills in:
     {"session": "...", "stage": "...", "tasks": [ ... ]}
 
 Each task has `id`, `title`, `description`, `output` (path relative to the
-workspace), `solo`, `passes`, `attempts`, `last_error`, `verdict`, and for
-deepening tasks `branch`, `level`, `target`, `unknown`, `expected_sources`.
+workspace), `solo`, `passes`, `attempts`, `last_error`, `verdict`,
+`dispatched` (when it was last handed out, or null), and for deepening tasks
+`branch`, `level`, `target`, `unknown`, `expected_sources`.
 
 - A task is done when `passes` is true. Only set it after confirming the
   `output` file exists and is not empty.

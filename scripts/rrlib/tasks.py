@@ -1,5 +1,6 @@
 """Sessions and their task lists: create, hand out, complete, fail."""
 import shutil
+from datetime import datetime
 from pathlib import Path
 
 from .store import RRError, STAGES, load_plan, read_json, save_plan, today, type_id, write_json
@@ -159,6 +160,7 @@ def add_session(ws, stage, tasks=None):
             "attempts": 0,
             "last_error": None,
             "verdict": None,
+            "dispatched": None,
         })
 
     (sdir / "raw").mkdir(parents=True)
@@ -176,8 +178,12 @@ def _blocked(task):
     return not task["passes"] and task["attempts"] >= MAX_ATTEMPTS
 
 
-def next_tasks(ws, limit=None, session=None):
-    """The next batch to dispatch. A solo task is only ever returned on its own."""
+def next_tasks(ws, limit=None, session=None, mark=False):
+    """The next batch to dispatch. A solo task is only ever returned on its own.
+
+    With mark=True the batch is recorded as handed out, so the progress view can
+    show those tasks as running. Reads that are only looking must leave it False.
+    """
     session = session or current_session(ws)
     doc = load_tasks(ws, session)
     if limit is None:
@@ -195,6 +201,11 @@ def next_tasks(ws, limit=None, session=None):
         batch.append(task)
         if len(batch) >= limit:
             break
+    if mark and batch:
+        stamp = datetime.now().isoformat(timespec="seconds")
+        for task in batch:
+            task["dispatched"] = stamp
+        write_json(session_dir(ws, session) / "tasks.json", doc)
     remaining = sum(1 for t in doc["tasks"] if not t["passes"])
     return {
         "session": session,
@@ -263,6 +274,7 @@ def fail_task(ws, task_id, reason, session=None):
         raise RRError(f"task {task_id} is already complete")
     task["attempts"] += 1
     task["last_error"] = reason
+    task["dispatched"] = None
     write_json(session_dir(ws, session) / "tasks.json", doc)
     _log(ws, session, f"{task_id}: FAILED (attempt {task['attempts']}): {reason}")
     return {"failed": task_id, "attempts": task["attempts"], "blocked": _blocked(task)}
@@ -276,6 +288,7 @@ def retry_task(ws, task_id, session=None):
     if task["passes"]:
         raise RRError(f"task {task_id} is already complete")
     task["attempts"] = 0
+    task["dispatched"] = None
     write_json(session_dir(ws, session) / "tasks.json", doc)
     _log(ws, session, f"{task_id}: attempts reset for a retry")
     return {"retry": task_id, "attempts": 0}

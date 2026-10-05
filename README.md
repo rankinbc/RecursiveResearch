@@ -36,6 +36,17 @@ stages and asks for your approval three times:
 Every claim carries a provenance tier: `PRIMARY`, `EXPERT`, `SECONDARY`,
 `INFERRED`, `OBSERVED`, or `UNKNOWN`.
 
+## Watching a run
+
+From a second terminal in the same project folder:
+
+    python /path/to/RecursiveResearch/scripts/rr.py --root research progress <subject> --watch
+
+It refreshes every 5 seconds and shows task counts per stage, which tasks are
+running, done or blocked, findings per wave, and which branches are open or
+closed and why. A task shows as running from when it is handed to an agent
+until it completes or fails; there is no view inside an agent while it works.
+
 ## Controlling cost and depth
 
 Set these in `plan.json` under `controls`, or ask for them at the plan gate:
