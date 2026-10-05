@@ -1,8 +1,20 @@
 {
   "name": "recursive-research",
-  "description": "Research a subject to a chosen depth and leave behind a structured, source-tagged knowledge base. The research writes its own next-level backlog and stops each branch when it runs dry.",
+  "description": "A Claude skill for deep research. It researches a subject to a chosen depth and leaves behind a structured, source-tagged knowledge base, writing its own next-level backlog and stopping each branch when it runs dry.",
   "version": "0.1.0",
   "author": {
-    "name": "rankinbc1"
-  }
+    "name": "rankinbc",
+    "url": "https://github.com/rankinbc"
+  },
+  "homepage": "https://github.com/rankinbc/RecursiveResearch",
+  "repository": "https://github.com/rankinbc/RecursiveResearch",
+  "keywords": [
+    "claude-skill",
+    "claude-code",
+    "claude-code-plugin",
+    "research",
+    "deep-research",
+    "knowledge-base",
+    "agents"
+  ]
 }

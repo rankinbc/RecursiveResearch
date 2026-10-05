@@ -1,16 +1,17 @@
 {
   "name": "recursive-research",
   "owner": {
-    "name": "rankinbc1"
+    "name": "rankinbc",
+    "url": "https://github.com/rankinbc"
   },
   "metadata": {
-    "description": "The recursive-research plugin, installable straight from its repository."
+    "description": "The recursive-research Claude skill, installable straight from its repository."
   },
   "plugins": [
     {
       "name": "recursive-research",
       "source": "./",
-      "description": "Research a subject to a chosen depth and leave behind a structured, source-tagged knowledge base."
+      "description": "A Claude skill that researches a subject to a chosen depth and leaves behind a structured, source-tagged knowledge base."
     }
   ]
 }

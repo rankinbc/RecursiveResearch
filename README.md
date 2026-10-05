@@ -1,9 +1,17 @@
 # RecursiveResearch
 
-A Claude Code plugin that researches a subject to a chosen depth and leaves
-behind a structured, source-tagged knowledge base. The research writes its own
+**A Claude skill for deep research**, packaged as a plugin for
+[Claude Code](https://claude.com/claude-code).
+
+You name a subject. Claude researches it to a chosen depth and leaves behind a
+structured, source-tagged knowledge base. The research writes its own
 next-level backlog from the gaps it finds, and stops each branch when it runs
 dry.
+
+It is not a standalone program: it runs inside Claude Code, which supplies the
+model, the agents and the web search. The repository holds the skill (the
+instructions Claude follows), two agent definitions, and a small Python script
+that keeps the state.
 
 ## Requirements
 
@@ -12,11 +20,12 @@ dry.
 
 ## Install
 
-The repository is its own plugin marketplace. From a clone, inside Claude
-Code:
+The repository is its own plugin marketplace. Inside Claude Code:
 
-    /plugin marketplace add /path/to/RecursiveResearch
+    /plugin marketplace add rankinbc/RecursiveResearch
     /plugin install recursive-research@recursive-research
+
+From a local clone, give the folder path in place of `rankinbc/RecursiveResearch`.
 
 To try it for one session without installing:
 
