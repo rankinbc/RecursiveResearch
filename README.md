@@ -35,6 +35,14 @@ trust. This gives you something you can build on:
 
 ## How it works
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/flow-dark.svg">
+    <img src="docs/images/flow-light.svg" width="900"
+         alt="How recursive-research works. Five stages run in order: plan, survey, schema, catalogue, and deepening. You approve the plan, the schema, and each round of deepening. Inside deepening, a loop runs: known unknowns, your approval, researchers, a script that checks each quote against its source, an organizer that files the findings, and a script that scores each branch. Productive branches produce new proposals for the next round. A branch that has run dry closes, with the reason recorded.">
+  </picture>
+</p>
+
 You give it a subject and say what the research is for. It then works through
 four stages:
 
@@ -60,12 +68,9 @@ valid output.
 
 ### The deepening loop
 
-This is the part that gives the plugin its name.
-
-    known unknowns ──▶ you approve ──▶ researchers ──▶ organizer
-          ▲                                                │
-          │                                                ▼
-          └──── new proposals ◀── branches scored ◀── findings filed
+This is the part that gives the plugin its name, shown in the lower half of
+the diagram. What is still unknown becomes the next round's tasks, and the
+loop keeps going only where it is still finding things.
 
 Each researcher finishes with a verdict:
 
