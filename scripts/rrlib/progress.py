@@ -2,6 +2,7 @@
 from pathlib import Path
 
 from .report import status
+from .scorecard import scorecard
 from .scoring import DISPOSITIONS, GATE
 from .store import RRError, STAGES, load_plan, read_json
 from .tasks import MAX_ATTEMPTS, load_tasks, session_dir
@@ -72,6 +73,7 @@ def progress(ws):
                       "reason": b.get("reason", "")}
                      for name, b in sorted(plan["branches"].items())],
         "agent_runs": runs,
+        "knowledge": scorecard(ws)["overall"],
     }
 
 
@@ -116,5 +118,14 @@ def render(data):
             reason = f"  {b['reason']}" if b["reason"] else ""
             lines.append(f"  {b['status']:<7} {b['branch']:<36} level {b['level']}{reason}")
 
+    k = data.get("knowledge")
+    if k and (k["claims"] or k["unknowns_open"]):
+        t = k["tiers"]
+        lines += ["", "Knowledge",
+                  f"  claims {k['claims']}   verified {k['verified']}   expert {t['EXPERT']}   "
+                  f"secondary {t['SECONDARY']}   inferred {t['INFERRED']}   observed {t['OBSERVED']}",
+                  f"  open unknowns {k['unknowns_open']}   conflicts {k['conflicts']}"]
+        if k["unverified_primary"]:
+            lines.append(f"  {k['unverified_primary']} PRIMARY claims not yet checked; run verify")
     lines += ["", f"Agent runs so far: {data['agent_runs']}"]
     return "\n".join(lines)

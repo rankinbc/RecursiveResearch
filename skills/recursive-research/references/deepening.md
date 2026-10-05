@@ -85,5 +85,6 @@ reopen any branch at the gate.
    `knowledge/remaining_unknowns.md` and lists lines marked `CONFLICT`.
 3. `RR validate <slug> tree`.
 4. `RR set-stage <slug> deepening done`.
-5. Tell the user where the knowledge base is, how many branches closed and
-   why, how many unknowns remain, and each conflict for them to decide.
+5. `RR scorecard <slug>`, and tell the user where the knowledge base is, how
+   many claims it holds and how many are verified, how many branches closed
+   and why, how many unknowns remain, and each conflict for them to decide.
