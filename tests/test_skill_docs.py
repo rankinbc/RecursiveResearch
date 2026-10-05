@@ -1,0 +1,46 @@
+import re
+import sys
+import unittest
+
+from helpers import REPO
+from test_plugin_files import frontmatter
+
+sys.path.insert(0, str(REPO / "scripts"))
+import rr  # noqa: E402
+
+SKILL = REPO / "skills" / "recursive-research"
+DOCS = [SKILL / "SKILL.md", *sorted((SKILL / "references").glob("*.md"))]
+COMMANDS = set(rr.build_parser()._subparsers._group_actions[0].choices)
+
+
+class SkillDocTests(unittest.TestCase):
+    def test_skill_frontmatter(self):
+        meta = frontmatter(SKILL / "SKILL.md")
+        self.assertEqual(meta["name"], "recursive-research")
+        self.assertTrue(meta["description"].startswith("Use when"))
+
+    def test_skill_file_stays_short(self):
+        lines = (SKILL / "SKILL.md").read_text(encoding="utf-8").splitlines()
+        self.assertLess(len(lines), 130, "move detail into references/ so it loads only when needed")
+
+    def test_every_reference_mentioned_exists(self):
+        mentioned = set()
+        for doc in DOCS:
+            mentioned |= set(re.findall(r"references/([a-z-]+\.md)", doc.read_text(encoding="utf-8")))
+        existing = {p.name for p in (SKILL / "references").glob("*.md")}
+        self.assertEqual(mentioned - existing, set(), "mentioned but missing")
+        self.assertEqual(existing - mentioned, set(), "present but never mentioned")
+
+    def test_every_script_command_in_the_docs_is_real(self):
+        for doc in DOCS:
+            for command in re.findall(r"\bRR ([a-z][a-z-]*)", doc.read_text(encoding="utf-8")):
+                self.assertIn(command, COMMANDS, f"{doc.name} mentions 'RR {command}'")
+
+    def test_every_script_command_is_documented(self):
+        text = "".join(doc.read_text(encoding="utf-8") for doc in DOCS)
+        for command in sorted(COMMANDS):
+            self.assertRegex(text, rf"\bRR {command}\b", f"'RR {command}' is never explained")
+
+
+if __name__ == "__main__":
+    unittest.main()
