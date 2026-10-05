@@ -95,7 +95,7 @@ class ApplyTests(WorkspaceCase):
         self.finish(self.session, "dry", raw_result("dry", "irreducible"))
         self.finish(self.session, "live", raw_result("live"))
         self.write(f"sessions/{self.session}/proposals/level_2.json", {"level": 2, "proposals": [
-            proposal("d2", branch="wire/framing/sub", level=2, status="proposed"),
+            proposal("d2", branch="wire/framing", level=2, status="proposed"),
             proposal("l2", branch="wire/handshake", level=2, status="proposed"),
         ]})
 
@@ -112,7 +112,25 @@ class ApplyTests(WorkspaceCase):
         self.assertEqual(branches["wire/framing"]["status"], "closed")
         self.assertEqual(branches["wire/handshake"], {"status": "open", "level": 1})
 
-    def test_proposals_under_a_closed_branch_are_dropped(self):
+    def test_a_closed_parent_does_not_take_its_productive_sub_branchs_proposals_with_it(self):
+        self.write(f"sessions/{self.session}/proposals/level_3.json", {"level": 3, "proposals": [
+            proposal("child", branch="wire/framing/sub", level=3, status="proposed")]})
+        gate = self.apply()
+        doc = store.read_json(self.ws / "sessions" / self.session / "proposals" / "level_3.json")
+        self.assertEqual(doc["proposals"][0]["status"], "proposed")
+        self.assertEqual(gate["proposals_dropped"], 1)
+        self.assertEqual(sorted(p["id"] for p in gate["proposals"]), ["child", "l2"])
+
+    def test_reopening_does_not_restore_a_sub_branchs_dropped_proposal(self):
+        self.apply()
+        doc_path = self.ws / "sessions" / self.session / "proposals" / "level_2.json"
+        doc = store.read_json(doc_path)
+        doc["proposals"].append(proposal("sub", branch="wire/framing/sub", level=2, status="dropped"))
+        store.write_json(doc_path, doc)
+        self.assertEqual(scoring.reopen_branch(self.ws, "wire/framing")["proposals_restored"], 1)
+        self.assertEqual({p["id"]: p["status"] for p in store.read_json(doc_path)["proposals"]}["sub"], "dropped")
+
+    def test_proposals_on_a_closed_branch_are_dropped(self):
         self.apply()
         doc = store.read_json(self.ws / "sessions" / self.session / "proposals" / "level_2.json")
         self.assertEqual([p["status"] for p in doc["proposals"]], ["dropped", "proposed"])

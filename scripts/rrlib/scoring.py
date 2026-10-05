@@ -2,7 +2,7 @@
 from pathlib import Path
 
 from .provenance import WEAK
-from .store import RRError, is_under, load_plan, read_json, save_plan, write_json
+from .store import RRError, load_plan, read_json, save_plan, write_json
 from .tasks import MAX_ATTEMPTS, current_session, load_tasks, session_dir
 
 DISPOSITIONS = ("new", "duplicate", "conflict")
@@ -158,8 +158,8 @@ def apply_score(ws, result):
         doc = read_json(proposals)
         changed = False
         for p in doc.get("proposals", []):
-            if p.get("status") in ("proposed", "approved") and any(
-                    is_under(p.get("branch", ""), c) for c in all_closed):
+            # Exact match only: a sub-branch is its own branch and may still be productive.
+            if p.get("status") in ("proposed", "approved") and p.get("branch") in all_closed:
                 p["status"] = "dropped"
                 p["dropped_reason"] = "branch closed"
                 dropped += 1
@@ -184,7 +184,7 @@ def reopen_branch(ws, branch):
         doc = read_json(path)
         changed = False
         for p in doc.get("proposals", []):
-            if p.get("status") == "dropped" and is_under(p.get("branch", ""), branch):
+            if p.get("status") == "dropped" and p.get("branch") == branch:
                 p["status"] = "proposed"
                 p.pop("dropped_reason", None)
                 restored += 1

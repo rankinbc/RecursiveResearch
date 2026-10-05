@@ -3,7 +3,7 @@ import re
 from pathlib import Path
 
 from .provenance import MAPPED_TIERS, TIERS, scan_markdown
-from .store import RRError, is_under, read_json, type_id
+from .store import RRError, read_json, type_id
 
 VERDICTS = ("exhausted", "irreducible", "sufficient", "continue")
 PROPOSAL_STATUSES = ("proposed", "approved", "skipped", "dropped")
@@ -225,7 +225,7 @@ def validate_proposals(doc, plan):
             issues.append(issue("error", where, "branch must be a folder path inside knowledge/tree"))
         elif not target.startswith(f"knowledge/tree/{branch}/") or ".." in target.split("/"):
             issues.append(issue("error", where, f"target_file must be inside knowledge/tree/{branch}/"))
-        elif any(is_under(branch, c) for c in closed):
+        elif branch in closed:
             issues.append(issue("error", where, f"branch {branch} is closed; reopen it before proposing work on it"))
         level = p.get("level")
         if not isinstance(level, int) or isinstance(level, bool) or level < 1:

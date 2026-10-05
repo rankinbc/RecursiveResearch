@@ -166,10 +166,12 @@ class ProposalTests(WorkspaceCase):
         self.assertEqual(self.check(proposal("p1", level=4)), [])
         self.assertIn("past the depth cap of 4", self.check(proposal("p1", level=5))[0])
 
-    def test_proposals_on_a_closed_branch_or_its_children_are_rejected(self):
-        closed = {"wire": {"status": "closed", "reason": "exhausted"}}
+    def test_proposals_on_a_closed_branch_are_rejected_but_its_sub_branches_stay_open(self):
+        closed = {"wire/framing": {"status": "closed", "reason": "exhausted"}}
         self.assertIn("is closed", self.check(proposal("p1"), **closed)[0])
-        self.assertEqual(self.check(proposal("p1", branch="wireless/x"), **closed), [])
+        self.assertEqual(self.check(proposal("p1", branch="wire/framing/sub"), **closed), [])
+        self.assertEqual(self.check(proposal("p1", branch="wire"), **closed), [])
+        self.assertEqual(self.check(proposal("p1", branch="wire/framing2"), **closed), [])
 
     def test_duplicate_ids_and_bad_status_are_rejected(self):
         self.assertIn("duplicate id", self.check(proposal("p1"), proposal("p1")))

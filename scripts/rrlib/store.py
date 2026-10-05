@@ -34,11 +34,6 @@ def type_id(name):
     return s
 
 
-def is_under(branch, parent):
-    """True if branch is parent or one of its descendants."""
-    return branch == parent or branch.startswith(parent + "/")
-
-
 def read_json(path):
     try:
         # utf-8-sig also accepts files saved with a byte order mark (common on Windows)

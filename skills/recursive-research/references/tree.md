@@ -16,7 +16,10 @@ Depth varies by branch. A simple branch may be two levels; a complex one may
 be five. Let the content decide.
 
 A **branch** is a folder path relative to `knowledge/tree/`, such as `wire` or
-`wire/framing`. Closing a branch closes everything beneath it.
+`wire/framing`. Each branch opens and closes on its own: closing `wire` does
+not close `wire/framing`, because the parent's own questions can run dry while
+a sub-topic still has findable ones. A proposal belongs to exactly one branch,
+the folder its output goes in.
 
 ## Every folder has a README.md
 

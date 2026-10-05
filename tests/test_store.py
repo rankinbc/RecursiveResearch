@@ -19,11 +19,6 @@ class SlugTests(unittest.TestCase):
         self.assertEqual(store.type_id("CharacterClass"), "character_class")
         self.assertEqual(store.type_id("HTTP header"), "http_header")
 
-    def test_is_under_matches_whole_path_segments_only(self):
-        self.assertTrue(store.is_under("wire/framing", "wire"))
-        self.assertTrue(store.is_under("wire", "wire"))
-        self.assertFalse(store.is_under("wireless", "wire"))
-
 
 class ScaffoldTests(WorkspaceCase):
     def test_scaffold_creates_layout_and_default_plan(self):
