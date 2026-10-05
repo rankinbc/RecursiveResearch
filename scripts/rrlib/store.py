@@ -34,13 +34,39 @@ def type_id(name):
     return s
 
 
+def read_text(path):
+    """Read a text file a person or an agent may have saved in a Windows editor.
+
+    UTF-8 with or without a byte order mark, and UTF-16 with one (what Windows
+    PowerShell 5.1 writes by default), are all accepted.
+    """
+    path = Path(path)
+    try:
+        data = path.read_bytes()
+    except FileNotFoundError:
+        raise RRError(f"missing file: {path.as_posix()}") from None
+    try:
+        if data[:2] in (b"\xff\xfe", b"\xfe\xff"):
+            return data.decode("utf-16")
+        return data.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        raise RRError(f"{path.as_posix()} is not UTF-8 text; save it again as UTF-8") from None
+
+
+def write_text(path, text):
+    """Write UTF-8 text with LF line endings, creating parent folders.
+
+    Path.write_text only accepts newline= from Python 3.10, and 3.9 is supported.
+    """
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
+        f.write(text)
+
+
 def read_json(path):
     try:
-        # utf-8-sig also accepts files saved with a byte order mark (common on Windows)
-        with open(path, encoding="utf-8-sig") as f:
-            return json.load(f)
-    except FileNotFoundError:
-        raise RRError(f"missing file: {Path(path).as_posix()}") from None
+        return json.loads(read_text(path))
     except json.JSONDecodeError as e:
         raise RRError(f"{Path(path).as_posix()} is not valid JSON: {e}") from None
 

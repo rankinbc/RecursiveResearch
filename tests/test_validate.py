@@ -215,6 +215,12 @@ class TreeTests(WorkspaceCase):
             ("warning", "retry.md"),
         })
 
+    def test_a_utf16_readme_in_the_tree_is_read_not_crashed_on(self):
+        path = self.ws / "knowledge" / "tree" / "README.md"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes("# Tree [PRIMARY]\n\n## Known Unknowns\n".encode("utf-16"))
+        self.assertEqual(validate.validate_tree(self.ws / "knowledge" / "tree"), [])
+
     def test_generic_file_names_get_a_warning(self):
         self.write("knowledge/tree/README.md", "# Tree [PRIMARY]\n\n## Known Unknowns\n")
         self.write("knowledge/tree/data.json", {"_meta": {"provenance": "UNKNOWN"}})

@@ -3,7 +3,7 @@ import re
 from pathlib import Path
 
 from .provenance import MAPPED_TIERS, TIERS, scan_markdown
-from .store import RRError, read_json, type_id
+from .store import RRError, read_json, read_text, type_id
 
 VERDICTS = ("exhausted", "irreducible", "sufficient", "continue")
 PROPOSAL_STATUSES = ("proposed", "approved", "skipped", "dropped")
@@ -248,7 +248,7 @@ def validate_tree(tree_dir):
         readme = folder / "README.md"
         if not readme.is_file():
             issues.append(issue("error", rel, "folder has no README.md"))
-        elif "## Known Unknowns" not in readme.read_text(encoding="utf-8-sig"):
+        elif "## Known Unknowns" not in read_text(readme):
             issues.append(issue("error", f"{rel}/README.md", "has no '## Known Unknowns' section"))
     for path in sorted(p for p in tree.rglob("*") if p.is_file()):
         rel = path.relative_to(tree).as_posix()
@@ -266,7 +266,7 @@ def validate_tree(tree_dir):
             elif meta["provenance"] != "UNKNOWN" and not _text(meta.get("source")):
                 issues.append(issue("error", rel, "needs _meta.source"))
         elif path.suffix == ".md":
-            scan = scan_markdown(path.read_text(encoding="utf-8-sig"))
+            scan = scan_markdown(read_text(path))
             if not sum(scan["counts"].values()):
                 level = "warning" if path.name == "README.md" else "error"
                 issues.append(issue(level, rel, "contains no provenance tags"))

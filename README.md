@@ -111,3 +111,7 @@ Version 0.1.0, a pre-release.
 
 Design, and what changed while building it:
 `docs/specs/2026-10-04-recursive-research-design.md`.
+
+## License
+
+MIT. See `LICENSE`.

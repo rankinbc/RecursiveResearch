@@ -7,7 +7,7 @@ import json
 import re
 from pathlib import Path
 
-from .store import RRError, load_plan, read_json
+from .store import RRError, load_plan, read_json, read_text, write_text
 from .tasks import current_session, load_tasks, session_dir
 from .validate import find_type
 
@@ -59,7 +59,7 @@ def _coordination(ws, plan, session, doc, task):
     path = session_dir(ws, plan["sessions"][index - 1]) / "coordination_brief.md" if index else None
     if path is None or not path.is_file():
         return NO_BRIEF
-    text = path.read_text(encoding="utf-8-sig").strip()
+    text = read_text(path).strip()
     top = task["branch"].split("/")[0]
     ids = [t["id"] for t in doc["tasks"] if t["branch"].split("/")[0] == top]
     lines = [line for line in text.splitlines() if any(i in line for i in ids)]
@@ -76,8 +76,7 @@ def _render(template, values):
 
 def _write(ws, session, name, text):
     path = session_dir(ws, session) / "briefs" / f"{name}.md"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(text, encoding="utf-8", newline="\n")
+    write_text(path, text)
     return path.as_posix()
 
 

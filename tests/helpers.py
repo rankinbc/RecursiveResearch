@@ -97,7 +97,7 @@ class WorkspaceCase(unittest.TestCase):
         path = self.ws / rel
         path.parent.mkdir(parents=True, exist_ok=True)
         if isinstance(content, str):
-            path.write_text(content, encoding="utf-8", newline="\n")
+            store.write_text(path, content)
         else:
             store.write_json(path, content)
         return path

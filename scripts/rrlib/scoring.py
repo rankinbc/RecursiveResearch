@@ -2,7 +2,7 @@
 from pathlib import Path
 
 from .provenance import WEAK
-from .store import RRError, load_plan, read_json, save_plan, write_json
+from .store import RRError, load_plan, read_json, read_text, save_plan, write_json
 from .tasks import MAX_ATTEMPTS, current_session, load_tasks, session_dir
 
 DISPOSITIONS = ("new", "duplicate", "conflict")
@@ -130,7 +130,7 @@ def apply_score(ws, result):
     blocked = sorted(n for n, b in result["branches"].items() if b["recommendation"] == "blocked")
 
     path = Path(ws) / "knowledge" / "remaining_unknowns.md"
-    existing = path.read_text(encoding="utf-8") if path.is_file() else ""
+    existing = read_text(path) if path.is_file() else ""
     text = "" if existing else "# Remaining unknowns\n"
     for name in to_close:
         b = result["branches"][name]

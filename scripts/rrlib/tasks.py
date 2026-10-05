@@ -3,7 +3,8 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 
-from .store import RRError, STAGES, load_plan, read_json, save_plan, today, type_id, write_json
+from .store import (RRError, STAGES, load_plan, read_json, save_plan, today, type_id, write_json,
+                    write_text)
 from .validate import (ID_RE, find_type, has_errors, validate_entity_file, validate_entity_schema,
                        validate_plan, validate_proposals, validate_raw, validate_tree)
 
@@ -166,8 +167,7 @@ def add_session(ws, stage, tasks=None):
     (sdir / "raw").mkdir(parents=True)
     (sdir / "proposals").mkdir()
     write_json(sdir / "tasks.json", {"session": name, "stage": stage, "tasks": filled})
-    (sdir / "activity.md").write_text(f"# Activity log -- {plan['subject']} -- {stage}\n\n",
-                                      encoding="utf-8", newline="\n")
+    write_text(sdir / "activity.md", f"# Activity log -- {plan['subject']} -- {stage}\n\n")
     plan["sessions"].append(name)
     plan["stages"][stage] = "in_progress"
     save_plan(ws, plan)

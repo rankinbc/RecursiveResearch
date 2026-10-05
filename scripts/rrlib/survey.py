@@ -2,7 +2,7 @@
 import re
 from pathlib import Path
 
-from .store import RRError, load_plan
+from .store import RRError, load_plan, read_text, write_text
 from .tasks import load_tasks
 
 
@@ -28,7 +28,7 @@ def assemble_survey(ws, force=False):
         if not task["passes"] or not path.is_file():
             missing.append(task["title"])
             continue
-        body = path.read_text(encoding="utf-8-sig").strip()
+        body = read_text(path).strip()
         match = re.search(r"^## +(.+)$", body, re.MULTILINE)
         if match:
             heading = match.group(1).strip()
@@ -44,7 +44,6 @@ def assemble_survey(ws, force=False):
     text += "\n\n".join(body for _, body in sections) + "\n"
     if missing:
         text += "\n## Missing sections\n\n" + "".join(f"- {title}\n" for title in missing)
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(text, encoding="utf-8", newline="\n")
+    write_text(target, text)
     return {"file": "knowledge/spec.md", "sections": len(sections), "missing": missing,
             "lines": text.count("\n")}

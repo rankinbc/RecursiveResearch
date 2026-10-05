@@ -16,5 +16,6 @@
     "deep-research",
     "knowledge-base",
     "agents"
-  ]
+  ],
+  "license": "MIT"
 }

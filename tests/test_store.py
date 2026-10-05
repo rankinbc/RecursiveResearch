@@ -65,6 +65,24 @@ class JsonTests(WorkspaceCase):
         path.write_bytes(b"\xef\xbb\xbf" + b'{"a": 1}')
         self.assertEqual(store.read_json(path), {"a": 1})
 
+    def test_read_json_accepts_utf16_as_written_by_windows_powershell(self):
+        for encoding in ("utf-16", "utf-16-le", "utf-16-be"):
+            path = self.ws / f"{encoding}.json"
+            bom = b"" if encoding == "utf-16" else "\ufeff".encode(encoding)
+            path.write_bytes(bom + '{"名前": 1}'.encode(encoding))
+            self.assertEqual(store.read_json(path), {"名前": 1}, encoding)
+
+    def test_text_that_is_neither_utf8_nor_utf16_is_an_rrerror_not_a_crash(self):
+        path = self.ws / "latin1.json"
+        path.write_bytes('{"a": "café"}'.encode("latin-1"))
+        with self.assertRaisesRegex(store.RRError, "not UTF-8"):
+            store.read_json(path)
+
+    def test_write_text_uses_lf_and_creates_folders(self):
+        path = self.ws / "deep" / "er" / "note.md"
+        store.write_text(path, "one\ntwo\n")
+        self.assertEqual(path.read_bytes(), b"one\ntwo\n")
+
     def test_read_json_reports_invalid_json_as_rrerror(self):
         path = self.write("bad.json", "{not json")
         with self.assertRaisesRegex(store.RRError, "not valid JSON"):
