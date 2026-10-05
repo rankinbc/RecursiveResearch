@@ -8,53 +8,51 @@ the next ones. Branches close on their own when they run dry.
 ## Bootstrap (wave 0)
 
 1. `RR add-session <slug> deepening`. The first deepening session has one
-   task, `bootstrap`.
-2. Dispatch one `recursive-research:organizer` agent with
-   `templates/organize-bootstrap.md`.
-3. `RR validate <slug> tree` and `RR validate <slug> proposals`. Send errors
-   back to the same agent to fix, once. If errors remain,
-   `RR fail-task <slug> bootstrap "<the errors>"` and tell the user.
-4. `RR complete-task <slug> bootstrap "<summary>"`.
-5. Go to the gate.
+   organizer task, `bootstrap`.
+2. Run the task loop from `SKILL.md`. `complete-task` refuses a malformed
+   tree; if it does, send the same agent the script's reason to fix, once,
+   and try again before recording a failure and telling the user.
+3. `RR validate <slug> proposals`. If it reports errors, have the same agent
+   fix them, once.
+4. Go to the gate.
 
 ## The gate
 
-Run `RR score <slug> --apply` (after bootstrap it closes nothing and only
-counts proposals). It scores a session once; running it again only repeats
-the summary, so it is safe after an interruption or a reopen. Then show the
-user:
+Run `RR score <slug> --apply` (after bootstrap it closes nothing). It scores
+a session once; running it again only repeats the summary, so it is safe
+after an interruption or a reopen. Its output is everything the gate needs.
+Show the user:
 
 - **Closed this wave:** each branch and its reason, from `closed`.
 - **Still open:** from `open`.
-- **Blocked:** branches whose tasks all failed, with the errors.
-- **Conflicts:** any lines the organizer marked `CONFLICT`, with both values
-  and their sources, for the user to decide.
-- **Proposals:** a numbered list from the session's `proposals/` files with
-  status `proposed`: title, the unknown it resolves, where it will look, and
-  its branch and level.
+- **Blocked:** from `blocked`, with the task errors from `RR status <slug>`.
+- **Conflicts:** any the organizer reported, with both values and their
+  sources, for the user to decide.
+- **Proposals:** a numbered list from `proposals`: title, the unknown it
+  resolves, where it will look, and its branch and level.
 - **Cost:** approving N proposals runs N researchers, at most
   `agents_per_batch` at a time, followed by one organizer.
 
-Tell them they can approve all, approve some, skip some, edit any, reopen a
-closed branch, or stop here.
+Tell them they can approve all, approve some, skip some, reopen a closed
+branch, or stop here.
 
-- **Reopen:** `RR reopen-branch <slug> <branch>`, then show its restored
-  proposals. If the result has a `note`, the branch is at the depth cap; tell
-  the user it will not go deeper unless they raise `controls.depth_cap`.
-- **Approve or skip:** set each proposal's `status` to `approved` or
-  `skipped` in the proposals file. Then `RR validate <slug> proposals`.
+- **Reopen:** `RR reopen-branch <slug> <branch>`, then run the score command
+  again to show its restored proposals. If the result has a `note`, the
+  branch is at the depth cap; tell the user it will not go deeper unless they
+  raise `controls.depth_cap`.
+- **Record the decisions:** `RR approve-proposals <slug> --all`, or
+  `RR approve-proposals <slug> <id> <id> --skip <id>`. It validates as well.
 - **Nothing approved, or nothing proposed:** go to consolidation.
 
 ## A research wave
 
 1. `RR add-session <slug> deepening`. This builds the wave from the approved
    proposals of the previous session.
-2. Run the research loop from `SKILL.md` with
-   `templates/research-deepening.md`.
-3. When no runnable tasks remain, dispatch one `recursive-research:organizer`
-   agent with `templates/organize-wave.md`.
-4. `RR validate <slug> tree` and `RR validate <slug> proposals`. Send errors
-   back to the same agent to fix, once.
+2. Run the task loop from `SKILL.md`.
+3. When no runnable tasks remain, `RR brief <slug> wave` and dispatch the
+   organizer it names with the brief path, exactly as in the loop.
+4. `RR validate <slug> tree` and `RR validate <slug> proposals`. If either
+   reports errors, have the same agent fix them, once.
 5. Go to the gate.
 
 ## How branches close
@@ -76,24 +74,11 @@ reopen any branch at the gate.
 
 ## Consolidation
 
-1. Dispatch one `recursive-research:organizer` agent with
-   `templates/organize-consolidate.md`.
-2. `RR validate <slug> tree`.
-3. `RR set-stage <slug> deepening done`.
-4. Tell the user where the knowledge base is, how many branches closed and
-   why, and how many unknowns remain in `remaining_unknowns.md`.
-
-## Filling the templates
-
-| Placeholder | Value |
-|---|---|
-| `{{SUBJECT}}`, `{{GOAL}}`, `{{PRECISION_BAR}}`, `{{DEFINITION_OF_DONE}}` | from the plan |
-| `{{PROVENANCE_MAPPING}}` | the plan's mapping, as a list |
-| `{{WORKSPACE}}` | `research/<slug>` |
-| `{{SESSION}}` | the current session name |
-| `{{TASK_ID}}`, `{{TASK_TITLE}}`, `{{TASK_DESCRIPTION}}` | from the task |
-| `{{UNKNOWN}}`, `{{EXPECTED_SOURCES}}`, `{{BRANCH}}`, `{{TARGET}}`, `{{OUTPUT}}` | from the task |
-| `{{BRIEF}}` | the contents of the previous session's `coordination_brief.md` |
-| `{{NEXT_LEVEL}}` | the wave's level plus 1 |
-| `{{DEPTH_CAP}}` | `controls.depth_cap` |
-| `{{CLOSED_BRANCHES}}` | the closed branches from `RR status` |
+1. `RR brief <slug> consolidate` and dispatch the organizer it names. It adds
+   cross-references and checks every README.
+2. `RR consolidate <slug>`. The script records every unknown still open in
+   `knowledge/remaining_unknowns.md` and lists lines marked `CONFLICT`.
+3. `RR validate <slug> tree`.
+4. `RR set-stage <slug> deepening done`.
+5. Tell the user where the knowledge base is, how many branches closed and
+   why, how many unknowns remain, and each conflict for them to decide.

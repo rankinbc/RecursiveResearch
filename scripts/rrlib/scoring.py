@@ -88,8 +88,12 @@ def _proposal_files(ws, session):
 
 
 def _pending(ws, session):
-    return sum(1 for path in _proposal_files(ws, session)
-               for p in read_json(path).get("proposals", []) if p.get("status") in ("proposed", "approved"))
+    """Proposals still awaiting a decision or a wave, without their long descriptions."""
+    return [{"id": p.get("id"), "title": p.get("title"), "unknown": p.get("unknown_being_resolved"),
+             "sources": p.get("expected_sources"), "branch": p.get("branch"), "level": p.get("level"),
+             "status": p.get("status")}
+            for path in _proposal_files(ws, session)
+            for p in read_json(path).get("proposals", []) if p.get("status") in ("proposed", "approved")]
 
 
 def _gate_summary(ws, session, names, blocked, dropped, already_applied):
@@ -102,8 +106,9 @@ def _gate_summary(ws, session, names, blocked, dropped, already_applied):
             closed.append({"branch": name, "reason": record.get("reason", "")})
         elif name not in blocked:
             still_open.append(name)
+    pending = _pending(ws, session)
     return {"session": session, "closed": closed, "open": still_open, "blocked": sorted(blocked),
-            "proposals_dropped": dropped, "proposals_pending": _pending(ws, session),
+            "proposals_dropped": dropped, "proposals_pending": len(pending), "proposals": pending,
             "agents_per_batch": plan["controls"]["max_agents_per_wave"],
             "already_applied": already_applied}
 

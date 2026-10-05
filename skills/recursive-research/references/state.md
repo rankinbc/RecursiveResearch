@@ -16,12 +16,14 @@ when you need to explain a file to the user.
       sessions/<session>/
         tasks.json
         activity.md
+        briefs/                  # each agent's rendered brief
         raw/
         proposals/level_<N>.json
         ledger.json              # deepening waves only
         coordination_brief.md    # deepening only; who owns what in the next wave
         gate.json                # deepening only; present once the session is scored
         knowledge_snapshot.json
+      issues/                    # full issue lists when validation finds more than ten
 
 Session names are `<date>_<stage>`, or `<date>_deepening_w<NN>` for deepening.
 Wave `w00` is the bootstrap. `plan.json` lists sessions in order under
@@ -77,6 +79,9 @@ Append one line to `activity.md` for every completion or failure.
 One entry for every finding in every completed task of the wave.
 
 ## Without the script
+
+Briefs are the files in the plugin's `templates` folder with each
+double-braced name replaced by the matching value from the plan or the task.
 
 Apply the closing rules in `references/deepening.md` by counting from the raw
 files and the ledger yourself, and tell the user the counts were done by hand.

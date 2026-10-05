@@ -5,18 +5,17 @@ properties they have. This is a schema pass. It does not list every instance.
 
 ## Steps
 
-1. `RR add-session <slug> entity_schema`. This creates one task, `schema`.
-2. Dispatch one `recursive-research:organizer` agent with
-   `templates/organize-schema.md`. Fill `{{SUBJECT}}`, `{{WORKSPACE}}`, and
-   `{{EXPECTED_TYPES}}` (the plan's `entity_types`).
-3. `RR validate <slug> entity_schema`. If it reports errors, send them back to
-   the same agent to fix, once. If it still fails, `RR fail-task` and tell the
-   user.
-4. `RR complete-task <slug> schema "<N> entity types"`.
-5. `RR set-stage <slug> entity_schema done`.
+1. `RR add-session <slug> entity_schema`. This creates one organizer task,
+   `schema`.
+2. Run the task loop from `SKILL.md`. `complete-task` refuses an invalid
+   schema; if it does, send the same agent the script's reason to fix, once,
+   and try again before recording a failure.
+3. `RR set-stage <slug> entity_schema done`.
 
 ## Gate: the entity type list
 
+Run `RR validate <slug> entity_schema`, then read `knowledge/entities.json`
+(this is one of the few files you read, because the user must approve it).
 Show the user a table: each type, its description, its estimated count, and
 its properties. Say that stage 3 will run one researcher per type, with web
 search, at most the agent cap at a time.

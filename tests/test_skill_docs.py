@@ -40,6 +40,13 @@ class SkillDocTests(unittest.TestCase):
         text = (SKILL / "references" / "survey.md").read_text(encoding="utf-8")
         self.assertLess(text.index("RR retry-task"), text.index("complete-task <slug> assemble"))
 
+    def test_the_skill_tells_the_user_when_a_fresh_session_is_safe(self):
+        self.assertIn("fresh session", (SKILL / "SKILL.md").read_text(encoding="utf-8"))
+
+    def test_the_loop_dispatches_from_the_brief_path(self):
+        text = (SKILL / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("Read your brief at", text)
+
     def test_every_script_command_in_the_docs_is_real(self):
         for doc in DOCS:
             for command in re.findall(r"\bRR ([a-z][a-z-]*)", doc.read_text(encoding="utf-8")):

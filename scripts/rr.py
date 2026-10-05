@@ -13,9 +13,23 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from rrlib import guard, progress, report, scoring, store, tasks, validate  # noqa: E402
+from rrlib import (briefs, consolidate, guard, progress, report, scoring, store, survey,  # noqa: E402
+                   tasks, validate)
 
 VALIDATE_TARGETS = ("plan", "entity_schema", "entity", "proposals", "raw", "tree")
+MAX_ISSUES = 10
+
+
+def compact_issues(ws, name, issues):
+    """Counts plus the first few issues; the full list goes to a file an agent can read."""
+    out = {"errors": sum(1 for i in issues if i["level"] == "error"),
+           "warnings": sum(1 for i in issues if i["level"] == "warning"),
+           "issues": issues[:MAX_ISSUES]}
+    if len(issues) > MAX_ISSUES:
+        path = ws / "issues" / f"{name}.json"
+        store.write_json(path, issues)
+        out["issues_file"] = path.as_posix()
+    return out
 
 
 def run_validate(ws, args):
@@ -71,6 +85,23 @@ def build_parser():
     p.add_argument("slug")
     p.add_argument("task_id")
     p.add_argument("reason")
+
+    p = sub.add_parser("brief", help="render the brief for an organizer job that is not a task")
+    p.add_argument("slug")
+    p.add_argument("job", choices=tuple(briefs.JOBS))
+
+    p = sub.add_parser("assemble-survey", help="join the raw survey sections into knowledge/spec.md")
+    p.add_argument("slug")
+    p.add_argument("--force", action="store_true", help="rebuild an existing spec.md, losing edits")
+
+    p = sub.add_parser("approve-proposals", help="record the user's decisions on a gate's proposals")
+    p.add_argument("slug")
+    p.add_argument("ids", nargs="*", help="proposal ids to approve")
+    p.add_argument("--all", action="store_true", help="approve every proposal not skipped")
+    p.add_argument("--skip", nargs="*", default=[], metavar="ID", help="proposal ids to skip")
+
+    p = sub.add_parser("consolidate", help="record open unknowns and list conflicts in the tree")
+    p.add_argument("slug")
 
     p = sub.add_parser("retry-task", help="give a blocked task a fresh set of attempts")
     p.add_argument("slug")
@@ -150,7 +181,17 @@ def dispatch(args):
     if args.command == "add-session":
         return tasks.add_session(ws, args.stage), 0
     if args.command == "next-task":
-        return tasks.next_tasks(ws, args.limit, mark=True), 0
+        return briefs.attach(ws, tasks.next_tasks(ws, args.limit, mark=True)), 0
+    if args.command == "brief":
+        return briefs.job_brief(ws, args.job), 0
+    if args.command == "assemble-survey":
+        return survey.assemble_survey(ws, args.force), 0
+    if args.command == "consolidate":
+        return consolidate.consolidate(ws), 0
+    if args.command == "approve-proposals":
+        result = tasks.decide_proposals(ws, args.ids, args.skip, args.all)
+        result.update(compact_issues(ws, "proposals", result.pop("issues")))
+        return result, 1 if result["errors"] else 0
     if args.command == "complete-task":
         return tasks.complete_task(ws, args.task_id, args.summary), 0
     if args.command == "fail-task":
@@ -162,9 +203,11 @@ def dispatch(args):
     if args.command == "validate":
         issues = run_validate(ws, args)
         ok = not validate.has_errors(issues)
-        return {"ok": ok, "issues": issues}, 0 if ok else 1
+        name = args.what + (f"-{args.id}" if args.id else "")
+        return {"ok": ok, **compact_issues(ws, name, issues)}, 0 if ok else 1
     if args.command == "promote-entity":
         result = tasks.promote_entity(ws, args.type_id)
+        result.update(compact_issues(ws, f"entity-{args.type_id}", result.pop("issues")))
         return result, 0 if result["promoted"] else 1
     if args.command == "snapshot":
         return guard.snapshot(ws), 0

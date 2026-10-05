@@ -16,15 +16,8 @@ Each folder's `README.md` must summarize its level, link to everything
 beneath it, and end with `## Known Unknowns`. Update the top-level
 `knowledge/tree/README.md` so its index lists every branch.
 
-## 3. Finish `remaining_unknowns.md`
+## 3. Leave the listing to the script
 
-`{{WORKSPACE}}/knowledge/remaining_unknowns.md` already has a section for each
-branch that was closed, with the reason. Keep those sections as they are. Add
-a final section, `## Open at the end`, listing every unticked item still under
-a `## Known Unknowns` heading in the tree that is not already in the file,
-with the path of the README it came from.
-
-## 4. List conflicts
-
-Search the tree for lines marked `CONFLICT`. In your reply, list each one
-with its file, so the coordinator can show them to the user.
+Do not edit `{{WORKSPACE}}/knowledge/remaining_unknowns.md`, and do not list
+unknowns or conflicts in your reply. A script collects both after you finish.
+Leave every line marked `CONFLICT` exactly as it is.

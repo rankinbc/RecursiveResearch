@@ -294,6 +294,36 @@ def retry_task(ws, task_id, session=None):
     return {"retry": task_id, "attempts": 0}
 
 
+def decide_proposals(ws, approve=(), skip=(), approve_all=False, session=None):
+    """Record the user's decisions on a gate's proposals in one call."""
+    session = session or current_session(ws)
+    files = sorted((session_dir(ws, session) / "proposals").glob("*.json"))
+    docs = [(path, read_json(path)) for path in files]
+    status = {p.get("id"): p.get("status") for _, doc in docs for p in doc.get("proposals", [])}
+    for pid in [*approve, *skip]:
+        if pid not in status:
+            raise RRError(f"there is no proposal {pid!r} in {session}")
+        if status[pid] == "dropped":
+            raise RRError(f"proposal {pid} was dropped because its branch closed; reopen the branch first")
+    counts = {"approved": 0, "skipped": 0, "proposed": 0}
+    for path, doc in docs:
+        for p in doc.get("proposals", []):
+            if p.get("status") not in ("proposed", "approved"):
+                continue
+            if p["id"] in skip:
+                p["status"] = "skipped"
+                counts["skipped"] += 1
+            elif approve_all or p["id"] in approve or p["status"] == "approved":
+                p["status"] = "approved"
+                counts["approved"] += 1
+            else:
+                counts["proposed"] += 1
+        write_json(path, doc)
+    plan = load_plan(ws)
+    issues = [i for _, doc in docs for i in validate_proposals(doc, plan)]
+    return {**counts, "issues": issues}
+
+
 def promote_entity(ws, tid, session=None):
     """Validate a researcher's roster in raw/ and copy it into knowledge/entities/."""
     session = session or current_session(ws)

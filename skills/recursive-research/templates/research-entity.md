@@ -11,8 +11,10 @@ tools are missing or fail, write nothing and reply with the single line
 
 {{TYPE_SCHEMA}}
 
-`{{WORKSPACE}}/knowledge/spec.md` has background. It is a starting point, not
-a complete list; find the instances it does not mention.
+`{{WORKSPACE}}/knowledge/spec.md` has background. Do not read the whole file:
+search it for this type's name and its example instances, and read only those
+passages. It is a starting point, not a complete list; find the instances it
+does not mention.
 
 ## Write
 

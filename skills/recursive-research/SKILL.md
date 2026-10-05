@@ -57,34 +57,45 @@ Run `RR status`. Then:
 | 3. Entity enumeration | `references/entity-enumeration.md` |
 | 4. Deepening | `references/deepening.md` |
 
-Read a stage's reference when that stage starts, not before. Agent briefs are
-in `templates/`; fill every `{{PLACEHOLDER}}` before dispatching.
-`references/provenance.md` and `references/tree.md` define the tags and the
-tree layout that the briefs refer to.
+Read a stage's reference when that stage starts, not before. Read
+`references/provenance.md` or `references/tree.md` only if the user asks how
+tags or the tree work; the agents' briefs already contain what they need.
 
-## The research loop
+## Keep your own context small
 
-Stages 1, 3 and 4 dispatch researchers the same way:
+The script writes each agent's brief to a file. Never read a brief, a raw
+result, or a file under `knowledge/` yourself unless the user asks about its
+content. Pass paths, not contents.
 
-1. `RR next-task <slug>` returns the next batch. It is never larger than the
-   plan's agent cap.
-2. `RR snapshot <slug>`.
-3. Dispatch one `recursive-research:researcher` agent per task, all in one
-   message so they run in parallel. Give each the stage's research template,
-   filled in for its task.
+## The task loop
+
+Every stage hands out work the same way:
+
+1. `RR next-task <slug>` returns the next batch: for each task its `id`,
+   `agent` (`researcher` or `organizer`), and `brief` path. The batch is never
+   larger than the plan's agent cap, and an organizer task always comes alone.
+2. If the batch is for researchers, `RR snapshot <slug>`.
+3. Dispatch one `recursive-research:<agent>` per task, all in one message so
+   they run in parallel. The whole prompt is:
+
+       Read your brief at <brief> and follow it.
+
 4. For each agent that returns:
    - It replied `SEARCH_UNAVAILABLE`: run `RR fail-task`, stop the stage, and
      tell the user.
    - Otherwise run `RR complete-task <slug> <id> "<one-line summary>"`. If the
      script refuses, run `RR fail-task <slug> <id> "<the script's reason>"`.
-5. `RR check-snapshot <slug>`. If it reports violations, a researcher wrote to
-   `knowledge/`. Stop, show the user the files, and do not continue until they
-   decide what to do.
-6. Repeat from step 1 until the batch is empty or only a solo task remains.
+5. If the batch was for researchers, `RR check-snapshot <slug>`. If it reports
+   violations, a researcher wrote to `knowledge/`. Stop, show the user the
+   files, and do not continue until they decide what to do.
+6. Repeat from step 1 until the batch is empty.
 
 A failed task is offered once more by `next-task`. After a second failure it
 appears under `blocked`; report blocked tasks to the user. If they want one
 tried again, `RR retry-task <slug> <id>` makes it runnable.
+
+When validation reports many issues it returns the first ten and an
+`issues_file`. To have an agent fix them, give it that path.
 
 ## Letting the user watch
 
@@ -94,18 +105,17 @@ command with the real script path:
 
     RR progress <slug> --watch
 
-It shows each stage's task counts, which tasks are running, done or blocked,
-per-wave findings, and which branches are open or closed.
-
 ## Gates
 
 At a gate, show the user what they are approving, say what happens next and
 how many agents it will use, and wait. Record plan and entity approvals with
-`RR approve`. Proposal approvals are recorded by setting each proposal's
-`status` to `approved` or `skipped`.
+`RR approve`, and proposal decisions with `RR approve-proposals`.
+
+Once the user has decided, tell them this is a safe point to start a
+fresh session and run this skill again: everything is on disk, and a long run
+costs less in several short sessions than in one long one.
 
 ## Resuming
 
-All state is on disk. If a session was interrupted, `RR status <slug>` says
-where to continue. Raw files from an unfinished wave are kept; finish the
-wave's remaining tasks, then run the organizer as usual.
+`RR status <slug>` says where to continue. Raw files from an unfinished wave
+are kept; finish the wave's remaining tasks, then carry on as usual.

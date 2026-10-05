@@ -6,8 +6,10 @@ the first research proposals.
 Read:
 
 - `{{WORKSPACE}}/knowledge/spec.md`
-- `{{WORKSPACE}}/knowledge/entities.json` and `{{WORKSPACE}}/knowledge/entities/`
-- `{{WORKSPACE}}/plan.json` for the goal and the precision bar
+- `{{WORKSPACE}}/knowledge/entities.json`, for which entity types exist
+- the file names in `{{WORKSPACE}}/knowledge/entities/`.
+  Do not open the roster files: the tree links to them and never copies
+  their data.
 
 **The goal:** {{GOAL}}
 **Precision needed:** {{PRECISION_BAR}}
