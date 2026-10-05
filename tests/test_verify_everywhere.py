@@ -134,6 +134,18 @@ class RosterTests(Base):
         self.assertEqual(e["provenance"], {"code": "SECONDARY", "reply": "PRIMARY"})
         self.assertIn("does not contain the value", e["verify_notes"]["code"])
 
+    def test_a_number_written_with_thousands_separators_or_k_is_found(self):
+        page = self.write("local/pay.html", "<p>The base salary range is $150,000 - $170,000, or 1.5 times.</p>"
+                                            "<p>Senior pay starts at $160K.</p>").as_posix()
+        band = {"quote": "The base salary range is $150,000 - $170,000, or 1.5 times.", "source_file": page}
+        path = self.roster(properties={"low": 150000, "high": 170000, "ratio": 1.5, "start": 160000, "wrong": 15},
+                           evidence={"low": band, "high": band, "ratio": band, "wrong": band,
+                                     "start": {"quote": "Senior pay starts at $160K.", "source_file": page}})
+        verify.verify_roster(self.ws, path)
+        e = self.entity(path)
+        self.assertEqual(e["provenance"], {"low": "PRIMARY", "high": "PRIMARY", "ratio": "PRIMARY",
+                                           "start": "PRIMARY", "wrong": "SECONDARY"})
+
     def test_evidence_can_be_given_per_property(self):
         path = self.roster(evidence={
             "code": {"quote": "The reply to HELLO is WELCOME, sent with code 1.", "source_file": self.src},

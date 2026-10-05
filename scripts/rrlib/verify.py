@@ -39,6 +39,22 @@ def normalize(text):
     return re.sub(r"\s+", " ", text.translate(_TYPOGRAPHY)).strip().lower()
 
 
+NUMBER_RE = re.compile(r"(\d[\d,]*(?:\.\d+)?)\s*([km])?\b", re.IGNORECASE)
+
+
+def _states(quote, value):
+    """True if the quote contains this number, however it is written: 150000, 150,000 or 150K."""
+    for digits, scale in NUMBER_RE.findall(quote):
+        try:
+            number = float(digits.replace(",", ""))
+        except ValueError:
+            continue
+        number *= {"k": 1_000, "m": 1_000_000}.get(scale.lower(), 1)
+        if abs(number - value) < 1e-9:
+            return True
+    return False
+
+
 def _http_get(url):
     request = urllib.request.Request(url, headers={"User-Agent": "recursive-research quote check"})
     with urllib.request.urlopen(request, timeout=TIMEOUT) as response:
@@ -238,7 +254,7 @@ def verify_roster(ws, path):
             problem = check(ws, claim) if "quote" in claim else NO_QUOTE
             value = properties[name]
             if (problem is None and isinstance(value, (int, float)) and not isinstance(value, bool)
-                    and str(value) not in normalize(str(claim["quote"]))):
+                    and not _states(str(claim["quote"]), value)):
                 problem = "the quote does not contain the value"
             if problem:
                 tiers[name] = "SECONDARY"
