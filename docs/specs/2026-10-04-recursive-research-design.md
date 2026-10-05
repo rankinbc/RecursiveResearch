@@ -13,7 +13,7 @@ right.
   subcommands. Beyond those in "State and scripts" it has `approve`,
   `retry-task`, `set-stage`, `promote-entity`, `snapshot`, `check-snapshot`,
   `reopen-branch`, `brief`, `assemble-survey`, `approve-proposals`,
-  `consolidate`, and `progress`.
+  `consolidate`, `progress`, `verify`, `scorecard`, and `report`.
 - **Briefs are rendered by the script.** The coordinator passes each agent
   the path of its filled-in brief and never fills a template by hand.
 - **Entity rosters go through `raw/`.** A researcher writes its roster to
@@ -36,8 +36,24 @@ right.
 - **How a source was read caps its tier.** Web tools return a model's summary,
   so anything learned only that way is at most `SECONDARY`, and a `PRIMARY`
   finding in stage 4 must carry the exact quote.
-- **Stage 4 quotes are checked by the script.** It fetches each `PRIMARY`
-  finding's source and downgrades the finding if the quote is not there.
+- **Every `PRIMARY` claim is checked by the script.** A `PRIMARY` claim
+  anywhere in the knowledge base must carry its evidence: the exact quote and
+  where it is. That means a tag of the form `[PRIMARY: "quote" address]` in
+  Markdown, `quote` with `source_url` or `source_file` in JSON, and an
+  `evidence` block in an entity roster, where a number must also appear in
+  its quote. The script fetches the source and looks for the words. A claim
+  that fails becomes `SECONDARY` with the reason. The check runs when an
+  organizer task completes, when a roster is promoted, when a wave is scored,
+  and at consolidation; `knowledge/verification.json` records what has been
+  checked, and fetched pages are kept in `sources/`.
+- **There is a scorecard.** `scorecard` counts claims by tier, how many are
+  verified, open unknowns and conflicts, overall and for each branch and
+  entity type.
+- **There is a report.** `report` writes the whole knowledge base as one
+  self-contained HTML page, `report.html`, led by the scorecard.
+- **An approval covers what was shown.** The script records what the user
+  approved. If the plan's content or the entity type list changes afterwards,
+  no work is handed out until it is approved again. The controls may change.
 - **Remembered claims in the survey are `OBSERVED`.** In stages 3 and 4 they
   must be `UNKNOWN`.
 - **Rules are enforced in the script:** no research before the plan is

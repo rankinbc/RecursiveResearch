@@ -301,6 +301,8 @@ You should see `recursive-research`. In a new Claude Code session, typing
     claude plugin marketplace update recursive-research
     claude plugin update recursive-research@recursive-research
 
+Then start a new Claude Code session, which is when the update takes effect.
+
 **Remove it:**
 
     claude plugin uninstall recursive-research@recursive-research
